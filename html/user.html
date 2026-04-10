@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PawCare — Galeri Hewan</title>
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/user.css">
+</head>
+<body>
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">🐾 PawCare</div>
+
+    <span class="nav-section">Menu</span>
+    <button class="nav-item active" id="nav-gallery"       onclick="showSection('gallery')">
+      🏠 Galeri Hewan
+    </button>
+    <button class="nav-item"        id="nav-my-adoptions"  onclick="showSection('my-adoptions')">
+      📋 Pengajuan Saya
+    </button>
+    <button class="nav-item"        id="nav-reports"       onclick="showSection('reports')">
+      📝 Laporan Hewan
+    </button>
+    <button class="nav-item"        id="nav-notifications" onclick="showSection('notifications')">
+      🔔 Notifikasi
+      <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+    </button>
+
+    <div class="sidebar-bottom">
+      <div class="user-info">
+        <div class="avatar" id="userAvatar">?</div>
+        <div>
+          <div class="user-name" id="userName">—</div>
+          <div class="user-role">Pengguna</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">🚪 Keluar</button>
+    </div>
+  </aside>
+
+  <!-- ==================== KONTEN UTAMA ==================== -->
+  <main class="main-content">
+
+    <!-- Galeri -->
+    <section class="section active" id="section-gallery">
+      <div class="page-header">
+        <h1>Galeri Hewan</h1>
+        <p>Temukan teman berbulu yang cocok untukmu</p>
+      </div>
+
+      <div class="filter-bar">
+        <input  type="text"   class="search-input" id="searchInput"    placeholder="🔍 Cari nama hewan..." oninput="filterAnimals()">
+        <select class="filter-select"              id="filterSpecies"  onchange="filterAnimals()">
+          <option value="">Semua Jenis</option>
+          <option value="Kucing">Kucing</option>
+          <option value="Anjing">Anjing</option>
+          <option value="Kelinci">Kelinci</option>
+          <option value="Burung">Burung</option>
+        </select>
+        <select class="filter-select"              id="filterStatus"   onchange="filterAnimals()">
+          <option value="">Semua Status</option>
+          <option value="available">Tersedia</option>
+          <option value="pending">Proses</option>
+          <option value="adopted">Diadopsi</option>
+        </select>
+      </div>
+
+      <div class="animal-grid" id="animalGrid"></div>
+    </section>
+
+    <!-- Pengajuan Saya -->
+    <section class="section" id="section-my-adoptions">
+      <div class="page-header">
+        <h1>Pengajuan Saya</h1>
+        <p>Pantau status pengajuan adopsi Anda</p>
+      </div>
+      <div class="adoption-list" id="adoptionList"></div>
+    </section>
+
+    <!-- Notifikasi -->
+    <section class="section" id="section-notifications">
+      <div class="page-header">
+        <h1>Notifikasi</h1>
+        <p>Pembaruan terbaru untuk Anda</p>
+      </div>
+      <div class="notif-list" id="notifList"></div>
+    </section>
+
+    <!-- Laporan Perkembangan Hewan -->
+    <section class="section" id="section-reports">
+      <div class="page-header">
+        <h1>Laporan Perkembangan Hewan</h1>
+        <p>Kirim update kondisi hewan yang Anda adopsi kepada admin</p>
+      </div>
+
+      <!-- Tampilan daftar hewan yang diadopsi -->
+      <div id="reportsView">
+        <div id="adoptedAnimalGrid" class="adopted-grid"></div>
+      </div>
+
+      <!-- Tampilan riwayat laporan per hewan (muncul setelah klik hewan) -->
+      <div id="reportHistoryView" style="display:none">
+        <div class="report-history-header">
+          <button class="back-btn" onclick="backToReportList()">← Kembali</button>
+          <div>
+            <h3 id="reportHistoryTitle" style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--brown-dark)"></h3>
+            <p id="reportHistoryMeta" style="font-size:0.82rem;color:var(--text-light)"></p>
+          </div>
+          <button class="btn-report" style="margin-left:auto" onclick="openReportModal()">+ Kirim Laporan Baru</button>
+        </div>
+        <div class="report-timeline" id="reportTimeline"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODAL ADOPSI ==================== -->
+  <div class="modal-overlay" id="adoptModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h2>Formulir Adopsi</h2>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-top:-0.75rem;margin-bottom:0.5rem">
+        Lengkapi data diri Anda untuk mengajukan adopsi
+      </p>
+
+      <div class="animal-preview" id="modalAnimalPreview"></div>
+
+      <div class="form-group">
+        <label>Nama Lengkap</label>
+        <input type="text" id="adoptName" readonly>
+      </div>
+      <div class="form-group">
+        <label>Nomor HP</label>
+        <input type="tel"  id="adoptPhone" readonly>
+      </div>
+      <div class="form-group">
+        <label>Alamat Lengkap</label>
+        <textarea id="adoptAddress" placeholder="Masukkan alamat lengkap Anda..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Pengalaman Merawat Hewan</label>
+        <select id="adoptExperience">
+          <option value="none">Belum pernah</option>
+          <option value="beginner">Pemula (1-2 tahun)</option>
+          <option value="intermediate">Menengah (3-5 tahun)</option>
+          <option value="expert">Berpengalaman (5+ tahun)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Alasan Adopsi</label>
+        <textarea id="adoptReason" placeholder="Ceritakan mengapa Anda ingin mengadopsi hewan ini..."></textarea>
+      </div>
+      <button class="btn-primary" style="width:100%;margin-top:0.5rem" onclick="submitAdoption()">
+        Kirim Pengajuan
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL LAPORAN PERKEMBANGAN ==================== -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal" style="max-width:560px">
+      <button class="modal-close" onclick="closeReportModal()">✕</button>
+      <h2>Kirim Laporan Perkembangan</h2>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-top:-0.75rem;margin-bottom:1rem">
+        Ceritakan kondisi dan perkembangan hewan Anda kepada admin
+      </p>
+
+      <div class="animal-preview" id="reportAnimalPreview"></div>
+
+      <div class="form-group">
+        <label>Kondisi Umum Hewan</label>
+        <select id="reportKondisi">
+          <option value="sangat-baik">⭐ Sangat Baik — Sehat & aktif</option>
+          <option value="baik">✅ Baik — Normal, tidak ada masalah</option>
+          <option value="cukup">⚠️ Cukup — Ada sedikit masalah</option>
+          <option value="perlu-perhatian">🚨 Perlu Perhatian — Ada masalah serius</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Aspek yang Dilaporkan</label>
+        <div id="aspectCheckboxes" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.25rem">
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;padding:5px 12px;background:var(--cream);border:1.5px solid var(--warm);border-radius:99px;cursor:pointer;text-transform:none;letter-spacing:0">
+            <input type="checkbox" value="Kesehatan"> Kesehatan
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;padding:5px 12px;background:var(--cream);border:1.5px solid var(--warm);border-radius:99px;cursor:pointer;text-transform:none;letter-spacing:0">
+            <input type="checkbox" value="Pola Makan"> Pola Makan
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;padding:5px 12px;background:var(--cream);border:1.5px solid var(--warm);border-radius:99px;cursor:pointer;text-transform:none;letter-spacing:0">
+            <input type="checkbox" value="Perilaku"> Perilaku
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;padding:5px 12px;background:var(--cream);border:1.5px solid var(--warm);border-radius:99px;cursor:pointer;text-transform:none;letter-spacing:0">
+            <input type="checkbox" value="Vaksinasi"> Vaksinasi
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;padding:5px 12px;background:var(--cream);border:1.5px solid var(--warm);border-radius:99px;cursor:pointer;text-transform:none;letter-spacing:0">
+            <input type="checkbox" value="Sosialisasi"> Sosialisasi
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;padding:5px 12px;background:var(--cream);border:1.5px solid var(--warm);border-radius:99px;cursor:pointer;text-transform:none;letter-spacing:0">
+            <input type="checkbox" value="Kebersihan"> Kebersihan
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Deskripsi Perkembangan</label>
+        <textarea id="reportDesc" rows="4" placeholder="Ceritakan secara detail kondisi dan perkembangan hewan Anda saat ini..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Berat Badan Saat Ini (opsional)</label>
+        <input type="text" id="reportWeight" placeholder="cth: 3.5 kg">
+      </div>
+
+      <button class="btn-primary" style="width:100%;margin-top:0.25rem" onclick="submitReport()">
+        📤 Kirim Laporan
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- storage.js HARUS dimuat sebelum user.js -->
+  <script src="../js/storage.js"></script>
+  <script src="../js/user.js"></script>
+</body>
+</html>

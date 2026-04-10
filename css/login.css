@@ -1,0 +1,183 @@
+/* ============================================================
+   login.css — Gaya khusus halaman login & registrasi
+   ============================================================ */
+
+/* ---- Latar belakang ---- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(74,124,89,0.08)  0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(212,112,58,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(139,111,71,0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---- Emoji mengambang (dekorasi) ---- */
+.floats {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.float-emoji {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0.07;
+  animation: floatAnim 8s ease-in-out infinite;
+}
+@keyframes floatAnim {
+  0%, 100% { transform: translateY(0)    rotate(0deg); }
+  50%       { transform: translateY(-20px) rotate(5deg); }
+}
+
+/* ---- Halaman ---- */
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ---- Grid hero kiri/kanan ---- */
+.hero-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1100px;
+  width: 100%;
+  gap: 4rem;
+  align-items: center;
+}
+
+/* ---- Hero kiri ---- */
+.hero-left h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.1;
+  color: var(--brown-dark);
+  margin-bottom: 1.5rem;
+}
+.hero-left h1 em {
+  font-style: italic;
+  color: var(--green);
+}
+.hero-left p {
+  font-size: 1.05rem;
+  color: var(--text-light);
+  line-height: 1.8;
+  margin-bottom: 2.5rem;
+  font-weight: 300;
+}
+
+/* ---- Statistik ---- */
+.stats-row {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+.stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--orange);
+  display: block;
+}
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ---- Kartu Login ---- */
+.login-card {
+  background: var(--white);
+  border-radius: 2rem;
+  padding: 3rem;
+  box-shadow: 0 20px 60px rgba(92,74,42,0.12), 0 2px 8px rgba(92,74,42,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.login-card::before {
+  content: '🐾';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 8rem;
+  opacity: 0.04;
+  transform: rotate(15deg);
+  pointer-events: none;
+}
+
+/* ---- Brand logo dalam kartu ---- */
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--brown-dark);
+}
+
+/* ---- Tab Masuk / Daftar ---- */
+.tab-switcher {
+  display: flex;
+  background: var(--warm);
+  border-radius: 1rem;
+  padding: 4px;
+  margin-bottom: 2rem;
+  gap: 4px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.75rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: var(--white);
+  color: var(--brown-dark);
+  box-shadow: 0 2px 8px rgba(92,74,42,0.1);
+}
+
+/* ---- Divider "atau" ---- */
+.divider {
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.85rem;
+  margin: 1rem 0;
+  position: relative;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 35%;
+  height: 1px;
+  background: var(--warm);
+}
+.divider::before { left: 0; }
+.divider::after  { right: 0; }
+
+/* ---- Form register (tersembunyi secara default) ---- */
+.register-form { display: none; }
+
+@media (max-width: 768px) {
+  .hero-container { grid-template-columns: 1fr; gap: 2rem; }
+  .hero-left      { text-align: center; }
+  .stats-row      { justify-content: center; }
+}

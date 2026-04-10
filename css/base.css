@@ -1,0 +1,314 @@
+/* ============================================================
+   base.css — Variabel & gaya dasar bersama seluruh halaman
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ---- Variabel Warna ---- */
+:root {
+  --cream:       #F5F0E8;
+  --warm:        #E8DDD0;
+  --brown:       #8B6F47;
+  --brown-dark:  #5C4A2A;
+  --green:       #4A7C59;
+  --green-light: #6A9E78;
+  --orange:      #D4703A;
+  --red:         #C0392B;
+  --text:        #2C2416;
+  --text-light:  #6B5B45;
+  --white:       #FFFDF9;
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ---- Tipografi Umum ---- */
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* ---- Tombol Utama ---- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.85rem 1.5rem;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.btn-primary:hover {
+  background: var(--green-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(74,124,89,0.3);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.85rem 1.5rem;
+  background: transparent;
+  color: var(--brown);
+  border: 1.5px solid var(--brown);
+  border-radius: 0.75rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secondary:hover {
+  background: var(--brown);
+  color: white;
+}
+
+/* ---- Input & Form Umum ---- */
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1.5px solid var(--warm);
+  border-radius: 0.65rem;
+  background: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(74,124,89,0.1);
+}
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ---- Status Badge / Pill ---- */
+.status-pill {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 99px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.pill-available  { background: #E8F5EE; color: #2C7A4E; }
+.pill-pending    { background: #FEF3E2; color: #B45309; }
+.pill-adopted    { background: #F3F0FF; color: #6D28D9; }
+.pill-menunggu   { background: #FEF3E2; color: #B45309; }
+.pill-disetujui  { background: #E8F5EE; color: #2C7A4E; }
+.pill-ditolak    { background: #FEE2E2; color: #B91C1C; }
+
+/* ---- Alert / Pesan ---- */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  display: none;
+}
+.alert.show { display: block; }
+.alert-error   { background: #FFF0ED; border: 1px solid #F5C4B5; color: #C0442C; }
+.alert-success { background: #EDF5F0; border: 1px solid #B5D9C2; color: #2C7A4E; }
+
+/* ---- Toast Notifikasi ---- */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--brown-dark);
+  color: var(--cream);
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.88rem;
+  z-index: 9999;
+  max-width: 300px;
+  transform: translateY(120px);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  pointer-events: none;
+}
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ---- Modal ---- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(44,36,22,0.55);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalSlideUp 0.28s ease;
+}
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.modal h2 {
+  font-size: 1.5rem;
+  color: var(--brown-dark);
+  margin-bottom: 1.25rem;
+}
+.modal-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--warm);
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.modal-close:hover { background: var(--brown); color: white; }
+
+/* ---- Layout Sidebar ---- */
+.sidebar {
+  width: 260px;
+  min-height: 100vh;
+  padding: 2rem 1.5rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.main-content {
+  margin-left: 260px;
+  flex: 1;
+  padding: 2.5rem 3rem;
+  min-height: 100vh;
+}
+
+/* ---- Sidebar Nav Item ---- */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.92rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+/* ---- Page Header ---- */
+.page-header {
+  margin-bottom: 2rem;
+}
+.page-header h1 {
+  font-size: 2rem;
+  color: var(--brown-dark);
+}
+.page-header p {
+  color: var(--text-light);
+  margin-top: 0.3rem;
+  font-size: 0.95rem;
+}
+
+/* ---- Section Toggle ---- */
+.section        { display: none; }
+.section.active { display: block; }
+
+/* ---- Empty State ---- */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-light);
+}
+.empty-state .emoji {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+.empty-state h3 {
+  font-size: 1.4rem;
+  color: var(--brown);
+  margin-bottom: 0.5rem;
+}
+
+/* ---- Form Row Dua Kolom ---- */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .sidebar       { transform: translateX(-100%); }
+  .main-content  { margin-left: 0; padding: 1.5rem; }
+  .form-row      { grid-template-columns: 1fr; }
+}

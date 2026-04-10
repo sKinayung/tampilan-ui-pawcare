@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PawCare — Admin</title>
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">🐾 PawCare <span class="admin-badge">Admin</span></div>
+
+    <span class="nav-section">Dashboard</span>
+    <button class="nav-item active" id="nav-overview"  onclick="showSection('overview')">
+      📊 Ringkasan
+    </button>
+
+    <span class="nav-section">Kelola</span>
+    <button class="nav-item" id="nav-animals"   onclick="showSection('animals')">
+      🐾 Data Hewan
+    </button>
+    <button class="nav-item" id="nav-adoptions" onclick="showSection('adoptions')">
+      📋 Pengajuan Adopsi
+      <span class="badge" id="pendingBadge" style="display:none">0</span>
+    </button>
+    <button class="nav-item" id="nav-users"     onclick="showSection('users')">
+      👥 Pengguna
+    </button>
+    <button class="nav-item" id="nav-reports"   onclick="showSection('reports')">
+      📝 Laporan Hewan
+      <span class="badge" id="newReportBadge" style="display:none">0</span>
+    </button>
+
+    <div class="sidebar-bottom">
+      <div class="admin-info">
+        <div class="avatar">A</div>
+        <div>
+          <div class="admin-name">Administrator</div>
+          <div class="admin-role">Super Admin</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">🚪 Keluar</button>
+    </div>
+  </aside>
+
+  <!-- ==================== KONTEN UTAMA ==================== -->
+  <main class="main-content">
+
+    <!-- Ringkasan -->
+    <section class="section active" id="section-overview">
+      <div class="page-header">
+        <h1>Dashboard Admin</h1>
+        <p>Selamat datang kembali, Administrator</p>
+      </div>
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="table-container">
+        <div class="table-header">
+          <h3>Pengajuan Terbaru</h3>
+          <button class="btn-add" onclick="showSection('adoptions')">Lihat Semua →</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Hewan</th><th>Pengaju</th><th>Tanggal</th><th>Status</th></tr>
+          </thead>
+          <tbody id="recentAdoptions"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Data Hewan -->
+    <section class="section" id="section-animals">
+      <div class="page-header">
+        <h1>Data Hewan</h1>
+        <p>Kelola daftar hewan yang tersedia untuk adopsi</p>
+      </div>
+      <div class="table-container">
+        <div class="table-header">
+          <h3>Daftar Hewan</h3>
+          <div style="display:flex;gap:0.75rem;align-items:center">
+            <input type="text" class="search-input" id="animalSearch" placeholder="Cari hewan..." oninput="renderAnimalsTable()">
+            <button class="btn-add" onclick="openAnimalModal()">+ Tambah Hewan</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Hewan</th><th>Jenis</th><th>Ras</th><th>Usia</th><th>Lokasi</th><th>Status</th><th>Aksi</th></tr>
+          </thead>
+          <tbody id="animalsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pengajuan Adopsi -->
+    <section class="section" id="section-adoptions">
+      <div class="page-header">
+        <h1>Pengajuan Adopsi</h1>
+        <p>Tinjau dan proses pengajuan adopsi dari pengguna</p>
+      </div>
+      <div class="table-container">
+        <div class="table-header">
+          <h3>Semua Pengajuan</h3>
+          <select class="search-input" id="adoptionFilter" onchange="renderAdoptionsTable()">
+            <option value="">Semua Status</option>
+            <option value="menunggu">Menunggu</option>
+            <option value="disetujui">Disetujui</option>
+            <option value="ditolak">Ditolak</option>
+          </select>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Hewan</th><th>Pengaju</th><th>Pengalaman</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr>
+          </thead>
+          <tbody id="adoptionsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pengguna -->
+    <section class="section" id="section-users">
+      <div class="page-header">
+        <h1>Data Pengguna</h1>
+        <p>Daftar pengguna terdaftar di platform PawCare</p>
+      </div>
+      <div class="table-container">
+        <div class="table-header">
+          <h3>Semua Pengguna</h3>
+          <input type="text" class="search-input" id="userSearch" placeholder="Cari pengguna..." oninput="renderUsersTable()">
+        </div>
+        <table>
+          <thead>
+            <tr><th>Nama</th><th>Email</th><th>No. HP</th><th>Bergabung</th><th style="text-align:center">Pengajuan</th></tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Laporan Perkembangan Hewan -->
+    <section class="section" id="section-reports">
+      <div class="page-header">
+        <h1>Laporan Perkembangan Hewan</h1>
+        <p>Laporan kondisi hewan pasca adopsi yang dikirim oleh pengguna</p>
+      </div>
+
+      <div class="filter-chips" id="reportFilterChips">
+        <button class="chip active" onclick="filterReports('')"               data-filter="">Semua</button>
+        <button class="chip"        onclick="filterReports('baru')"           data-filter="baru">🟠 Baru</button>
+        <button class="chip"        onclick="filterReports('dibaca')"         data-filter="dibaca">🔵 Dibaca</button>
+        <button class="chip"        onclick="filterReports('dibalas')"        data-filter="dibalas">🟢 Dibalas</button>
+        <button class="chip"        onclick="filterReports('sangat-baik')"    data-filter="sangat-baik">⭐ Sangat Baik</button>
+        <button class="chip"        onclick="filterReports('perlu-perhatian')" data-filter="perlu-perhatian">🚨 Perlu Perhatian</button>
+      </div>
+
+      <div class="report-cards" id="reportCards"></div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODAL TAMBAH/EDIT HEWAN ==================== -->
+  <div class="modal-overlay" id="animalModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeAnimalModal()">✕</button>
+      <h2 id="animalModalTitle">Tambah Hewan</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nama Hewan</label>
+          <input type="text" id="aName" placeholder="cth: Luna">
+        </div>
+        <div class="form-group">
+          <label>Emoji</label>
+          <input type="text" id="aImage" placeholder="🐱" maxlength="2" style="text-align:center;font-size:1.4rem">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Jenis Hewan</label>
+          <select id="aSpecies">
+            <option>Kucing</option>
+            <option>Anjing</option>
+            <option>Kelinci</option>
+            <option>Burung</option>
+            <option>Hamster</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ras / Breed</label>
+          <input type="text" id="aBreed" placeholder="cth: Persia">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Usia (tahun)</label>
+          <input type="number" id="aAge" min="0" max="30" placeholder="2">
+        </div>
+        <div class="form-group">
+          <label>Jenis Kelamin</label>
+          <select id="aGender">
+            <option value="Jantan">Jantan</option>
+            <option value="Betina">Betina</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Lokasi</label>
+        <input type="text" id="aLocation" placeholder="cth: Jakarta">
+      </div>
+      <div class="form-group">
+        <label>Deskripsi</label>
+        <textarea id="aDesc" placeholder="Ceritakan tentang hewan ini..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="aStatus">
+          <option value="available">Tersedia</option>
+          <option value="pending">Proses Adopsi</option>
+          <option value="adopted">Sudah Diadopsi</option>
+        </select>
+      </div>
+      <input type="hidden" id="aEditId">
+      <button class="btn-primary" style="width:100%;margin-top:0.5rem" onclick="saveAnimal()">Simpan</button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL TINJAU ADOPSI ==================== -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeReviewModal()">✕</button>
+      <h2>Tinjau Pengajuan</h2>
+      <div id="reviewDetails"></div>
+      <div class="form-group">
+        <label>Catatan Admin (opsional)</label>
+        <textarea class="note-input" id="adminNote" placeholder="Tulis catatan untuk pengaju..."></textarea>
+      </div>
+      <div class="review-actions">
+        <button class="btn-submit btn-submit-approve" onclick="processAdoption('disetujui')">✅ Setujui</button>
+        <button class="btn-submit btn-submit-reject"  onclick="processAdoption('ditolak')">❌ Tolak</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- storage.js HARUS dimuat sebelum admin.js -->
+  <script src="../js/storage.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+</html>
