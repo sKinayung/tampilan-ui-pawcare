@@ -33,6 +33,14 @@
       📝 Laporan Hewan
       <span class="badge" id="newReportBadge" style="display:none">0</span>
     </button>
+    <button class="nav-item" id="nav-boardings" onclick="showSection('boardings')">
+      🏡 Penitipan Hewan
+      <span class="badge" id="newBoardingBadge" style="display:none">0</span>
+    </button>
+    <button class="nav-item" id="nav-complaints" onclick="showSection('complaints')">
+      📣 Pengaduan
+      <span class="badge" id="newComplaintBadge" style="display:none">0</span>
+    </button>
 
     <div class="sidebar-bottom">
       <div class="admin-info">
@@ -146,15 +154,61 @@
       </div>
 
       <div class="filter-chips" id="reportFilterChips">
-        <button class="chip active" onclick="filterReports('')"               data-filter="">Semua</button>
-        <button class="chip"        onclick="filterReports('baru')"           data-filter="baru">🟠 Baru</button>
-        <button class="chip"        onclick="filterReports('dibaca')"         data-filter="dibaca">🔵 Dibaca</button>
-        <button class="chip"        onclick="filterReports('dibalas')"        data-filter="dibalas">🟢 Dibalas</button>
-        <button class="chip"        onclick="filterReports('sangat-baik')"    data-filter="sangat-baik">⭐ Sangat Baik</button>
+        <button class="chip active" onclick="filterReports('')"                data-filter="">Semua</button>
+        <button class="chip"        onclick="filterReports('baru')"            data-filter="baru">🟠 Baru</button>
+        <button class="chip"        onclick="filterReports('dibaca')"          data-filter="dibaca">🔵 Dibaca</button>
+        <button class="chip"        onclick="filterReports('dibalas')"         data-filter="dibalas">🟢 Dibalas</button>
+        <button class="chip"        onclick="filterReports('sangat-baik')"     data-filter="sangat-baik">⭐ Sangat Baik</button>
         <button class="chip"        onclick="filterReports('perlu-perhatian')" data-filter="perlu-perhatian">🚨 Perlu Perhatian</button>
       </div>
 
       <div class="report-cards" id="reportCards"></div>
+    </section>
+
+    <!-- Penitipan Hewan -->
+    <section class="section" id="section-boardings">
+      <div class="page-header">
+        <h1>Kelola Penitipan Hewan</h1>
+        <p>Tinjau dan kelola pengajuan penitipan dari pengguna</p>
+      </div>
+
+      <!-- Statistik ringkas -->
+      <div class="boarding-stat-row" id="boardingStatRow"></div>
+
+      <!-- Filter chip -->
+      <div class="filter-chips" id="boardingFilterChips">
+        <button class="chip active" onclick="filterBoardings('')"             data-filter="">Semua</button>
+        <button class="chip"        onclick="filterBoardings('menunggu')"     data-filter="menunggu">🟠 Menunggu</button>
+        <button class="chip"        onclick="filterBoardings('disetujui')"    data-filter="disetujui">🟢 Disetujui</button>
+        <button class="chip"        onclick="filterBoardings('berlangsung')"  data-filter="berlangsung">🔵 Berlangsung</button>
+        <button class="chip"        onclick="filterBoardings('selesai')"      data-filter="selesai">🟣 Selesai</button>
+        <button class="chip"        onclick="filterBoardings('ditolak')"      data-filter="ditolak">🔴 Ditolak</button>
+      </div>
+
+      <div class="boarding-cards" id="boardingCards"></div>
+    </section>
+
+    <!-- Pengaduan / Komplain -->
+    <section class="section" id="section-complaints">
+      <div class="page-header">
+        <h1>Kelola Pengaduan</h1>
+        <p>Tinjau dan tanggapi pengaduan dari pengguna</p>
+      </div>
+
+      <!-- Statistik -->
+      <div class="complaint-stat-row" id="complaintStatRow"></div>
+
+      <!-- Filter chip -->
+      <div class="filter-chips" id="complaintFilterChips">
+        <button class="chip active" onclick="filterComplaints('')"           data-filter="">Semua</button>
+        <button class="chip"        onclick="filterComplaints('baru')"       data-filter="baru">🟠 Baru</button>
+        <button class="chip"        onclick="filterComplaints('diproses')"   data-filter="diproses">🔵 Diproses</button>
+        <button class="chip"        onclick="filterComplaints('selesai')"    data-filter="selesai">🟢 Selesai</button>
+        <button class="chip"        onclick="filterComplaints('ditutup')"    data-filter="ditutup">⚫ Ditutup</button>
+        <button class="chip"        onclick="filterComplaints('kritis')"     data-filter="kritis">🚨 Kritis</button>
+      </div>
+
+      <div class="complaint-cards" id="complaintCards"></div>
     </section>
 
   </main>

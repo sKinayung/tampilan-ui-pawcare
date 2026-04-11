@@ -49,11 +49,13 @@ function showSection(name) {
   document.getElementById('nav-' + name).classList.add('active');
 
   const renderers = {
-    overview:  renderOverview,
-    animals:   renderAnimalsTable,
-    adoptions: renderAdoptionsTable,
-    users:     renderUsersTable,
-    reports:   renderReportsSection,
+    overview:   renderOverview,
+    animals:    renderAnimalsTable,
+    adoptions:  renderAdoptionsTable,
+    users:      renderUsersTable,
+    reports:    renderReportsSection,
+    boardings:  renderBoardingsSection,
+    complaints: renderComplaintsSection,
   };
   if (renderers[name]) renderers[name]();
 }
@@ -114,6 +116,8 @@ function renderOverview() {
 
   updatePendingBadge();
   updateNewReportBadge();
+  updateNewBoardingBadge();
+  updateNewComplaintBadge();
 }
 
 function updatePendingBadge() {
@@ -533,6 +537,458 @@ function sendReply(reportId) {
 }
 
 // ==============================================================
+// PENITIPAN HEWAN — ADMIN
+// ==============================================================
+
+const BOARDING_RATE = 50000;
+
+function formatRupiah(n) {
+  return 'Rp ' + n.toLocaleString('id-ID');
+}
+
+function calcDays(ci, co) {
+  return Math.max(0, Math.round((new Date(co) - new Date(ci)) / 86400000));
+}
+
+let activeBoardingFilter = '';
+
+const boardingStatusMap = {
+  menunggu:    { cls: 'bpill bpill-menunggu',    label: '⏳ Menunggu'    },
+  disetujui:   { cls: 'bpill bpill-disetujui',   label: '✅ Disetujui'   },
+  ditolak:     { cls: 'bpill bpill-ditolak',     label: '❌ Ditolak'     },
+  berlangsung: { cls: 'bpill bpill-berlangsung', label: '🔵 Berlangsung' },
+  selesai:     { cls: 'bpill bpill-selesai',     label: '🎉 Selesai'     },
+};
+
+const speciesEmoji = { Kucing:'🐱', Anjing:'🐕', Kelinci:'🐇', Burung:'🦜', Hamster:'🐹', Lainnya:'🐾' };
+
+function updateNewBoardingBadge() {
+  const count = getBoardings().filter(b => b.status === 'menunggu').length;
+  const badge = document.getElementById('newBoardingBadge');
+  badge.style.display = count > 0 ? 'inline-block' : 'none';
+  badge.textContent   = count;
+}
+
+function filterBoardings(filter) {
+  activeBoardingFilter = filter;
+  document.querySelectorAll('#boardingFilterChips .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.filter === filter);
+  });
+  renderBoardingsSection();
+}
+
+function renderBoardingStats() {
+  const all = getBoardings();
+  const stats = [
+    { icon:'⏳', label:'Menunggu',    val: all.filter(b=>b.status==='menunggu').length,    color:'var(--orange)' },
+    { icon:'🔵', label:'Berlangsung', val: all.filter(b=>b.status==='berlangsung').length, color:'#0891B2' },
+    { icon:'🎉', label:'Selesai',     val: all.filter(b=>b.status==='selesai').length,     color:'#6D28D9' },
+    { icon:'💰', label:'Total Pendapatan', val: formatRupiah(all.filter(b=>b.status==='selesai').reduce((s,b)=>s+b.totalCost,0)), color:'var(--green)', isText:true },
+  ];
+  document.getElementById('boardingStatRow').innerHTML = stats.map(s => `
+    <div class="stat-card" data-icon="${s.icon}">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value" style="font-size:${s.isText?'1.2rem':'2rem'};color:${s.color}">${s.val}</div>
+    </div>`
+  ).join('');
+}
+
+function renderBoardingsSection() {
+  renderBoardingStats();
+
+  let boardings = getBoardings().reverse();
+  if (activeBoardingFilter) {
+    boardings = boardings.filter(b => b.status === activeBoardingFilter);
+  }
+
+  const el = document.getElementById('boardingCards');
+
+  if (!boardings.length) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:4rem 2rem;color:var(--text-light)">
+        <div style="font-size:3rem;margin-bottom:1rem">🏡</div>
+        <h3 style="font-family:'Playfair Display',serif;color:var(--brown)">Tidak ada pengajuan</h3>
+        <p>Belum ada pengajuan penitipan pada filter ini</p>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = boardings.map(b => {
+    const st       = boardingStatusMap[b.status] || { cls:'bpill', label: b.status };
+    const emoji    = speciesEmoji[b.petSpecies] || '🐾';
+    const days     = calcDays(b.checkIn, b.checkOut);
+    const services = (b.services||[]).map(s=>`<span class="bc-service-tag">${s}</span>`).join('');
+
+    // Tombol aksi sesuai status
+    let actionBtns = '';
+    if (b.status === 'menunggu') {
+      actionBtns = `
+        <button class="btn-icon btn-approve"  onclick="openBoardingProcess(${b.id})">📋 Proses</button>`;
+    } else if (b.status === 'disetujui') {
+      actionBtns = `
+        <button class="btn-icon btn-edit"    onclick="updateBoardingStatus(${b.id},'berlangsung')">▶️ Mulai</button>
+        <button class="btn-icon btn-delete"  onclick="updateBoardingStatus(${b.id},'ditolak')">❌ Batalkan</button>`;
+    } else if (b.status === 'berlangsung') {
+      actionBtns = `
+        <button class="btn-icon btn-approve" onclick="updateBoardingStatus(${b.id},'selesai')">🎉 Tandai Selesai</button>`;
+    } else {
+      actionBtns = `<button class="btn-icon btn-edit" onclick="openBoardingProcess(${b.id})">👁️ Detail</button>`;
+    }
+
+    return `
+      <div class="boarding-card status-${b.status}" id="bc-${b.id}">
+        <div class="bc-header">
+          <div class="bc-left">
+            <span class="bc-emoji">${emoji}</span>
+            <div>
+              <div class="bc-top">${b.petName} <span style="font-size:0.85rem;font-weight:400;color:var(--text-light)">(${b.petBreed} · ${b.petSpecies})</span></div>
+              <div class="bc-user">👤 ${b.userName} · 📱 ${b.contactPhone}</div>
+            </div>
+          </div>
+          <div>
+            <span class="${st.cls}">${st.label}</span>
+            <div class="bc-date">${new Date(b.date).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})}</div>
+          </div>
+        </div>
+
+        <div class="bc-meta">
+          <span class="bc-tag">📥 Masuk: <strong>${new Date(b.checkIn).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})}</strong></span>
+          <span class="bc-tag">📤 Keluar: <strong>${new Date(b.checkOut).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})}</strong></span>
+          <span class="bc-tag">🗓 <strong>${days} hari</strong></span>
+          <span class="bc-tag">💰 <strong>${formatRupiah(b.totalCost)}</strong></span>
+          <span class="bc-tag">📧 ${b.userEmail}</span>
+        </div>
+
+        ${services ? `<div class="bc-services">${services}</div>` : ''}
+        ${b.notes     ? `<div class="bc-note">📝 <em>${b.notes}</em></div>` : ''}
+        ${b.adminNote ? `<div class="bc-note" style="background:#F0F7FF;border-left:3px solid #60A5FA;color:#1E40AF"><strong>💬 Catatan Admin:</strong> ${b.adminNote}</div>` : ''}
+
+        <div class="bc-actions">${actionBtns}</div>
+
+        <!-- Area proses (setuju/tolak) -->
+        <div class="bc-process-area" id="bpa-${b.id}">
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text-light);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">Catatan untuk Pengguna (opsional)</div>
+          <textarea class="bc-note-input" id="bni-${b.id}" placeholder="cth: Hewan diterima, harap bawa sertifikat vaksin saat check-in...">${b.adminNote||''}</textarea>
+          <div class="bc-process-actions">
+            <button class="btn-icon btn-approve" onclick="processBoardingDecision(${b.id},'disetujui')">✅ Setujui</button>
+            <button class="btn-icon btn-reject"  onclick="processBoardingDecision(${b.id},'ditolak')">❌ Tolak</button>
+            <button class="btn-icon"             onclick="toggleBoardingProcess(${b.id})" style="background:var(--warm);color:var(--brown-dark)">Batal</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  updateNewBoardingBadge();
+}
+
+function openBoardingProcess(id) {
+  // Tutup semua area proses lain dulu
+  document.querySelectorAll('.bc-process-area.open').forEach(el => el.classList.remove('open'));
+  document.getElementById('bpa-' + id).classList.add('open');
+  document.getElementById('bpa-' + id).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function toggleBoardingProcess(id) {
+  document.getElementById('bpa-' + id).classList.toggle('open');
+}
+
+function processBoardingDecision(id, decision) {
+  const note      = document.getElementById('bni-' + id).value.trim();
+  const boardings = getBoardings();
+  const idx       = boardings.findIndex(b => b.id === id);
+  if (idx === -1) return;
+
+  const b = boardings[idx];
+  boardings[idx] = { ...b, status: decision, adminNote: note, processedDate: new Date().toISOString() };
+  saveBoardings(boardings);
+
+  // Notifikasi ke pengguna
+  const notifs   = getNotifs();
+  const approved = decision === 'disetujui';
+  notifs.push({
+    id:      Date.now(),
+    userId:  b.userId,
+    title:   approved ? '✅ Penitipan Disetujui!' : '❌ Penitipan Ditolak',
+    message: approved
+      ? `Pengajuan penitipan ${b.petName} (${calcDays(b.checkIn,b.checkOut)} hari) telah disetujui.${note ? ' Catatan: '+note : ''}`
+      : `Maaf, pengajuan penitipan ${b.petName} tidak dapat diproses.${note ? ' Alasan: '+note : ''}`,
+    type:  approved ? 'approved' : 'rejected',
+    read:  false,
+    time:  new Date().toISOString(),
+  });
+  saveNotifs(notifs);
+
+  showToast(approved ? '✅ Penitipan disetujui!' : '❌ Penitipan ditolak.');
+  renderBoardingsSection();
+}
+
+function updateBoardingStatus(id, newStatus) {
+  const statusLabel = { berlangsung:'dimulai', selesai:'diselesaikan', ditolak:'dibatalkan' };
+  if (!confirm(`Yakin ingin menandai penitipan ini sebagai "${newStatus}"?`)) return;
+
+  const boardings = getBoardings();
+  const idx       = boardings.findIndex(b => b.id === id);
+  if (idx === -1) return;
+
+  const b = boardings[idx];
+  boardings[idx] = { ...b, status: newStatus, updatedDate: new Date().toISOString() };
+  saveBoardings(boardings);
+
+  // Notifikasi ke pengguna
+  const notifs  = getNotifs();
+  const msgMap  = {
+    berlangsung: `Penitipan ${b.petName} Anda kini sedang berlangsung. Hewan Anda dalam pengawasan kami! 🐾`,
+    selesai:     `Penitipan ${b.petName} telah selesai. Silakan jemput hewan Anda. Terima kasih! 🎉`,
+    ditolak:     `Penitipan ${b.petName} telah dibatalkan.`,
+  };
+  notifs.push({
+    id:      Date.now(),
+    userId:  b.userId,
+    title:   newStatus === 'berlangsung' ? '🔵 Penitipan Dimulai' : newStatus === 'selesai' ? '🎉 Penitipan Selesai' : '❌ Penitipan Dibatalkan',
+    message: msgMap[newStatus] || `Status penitipan ${b.petName} diperbarui.`,
+    type:    newStatus === 'selesai' ? 'approved' : newStatus === 'ditolak' ? 'rejected' : 'pending',
+    read:    false,
+    time:    new Date().toISOString(),
+  });
+  saveNotifs(notifs);
+
+  showToast(`✅ Status penitipan berhasil diperbarui ke "${newStatus}"`);
+  renderBoardingsSection();
+}
+
+// ==============================================================
+// PENGADUAN / KOMPLAIN — ADMIN
+// ==============================================================
+
+let activeComplaintFilter = '';
+
+const complaintStatusCfg = {
+  baru:     { pillCls: 'cspill-baru',     label: '⏳ Baru'     },
+  diproses: { pillCls: 'cspill-diproses', label: '🔵 Diproses' },
+  selesai:  { pillCls: 'cspill-selesai',  label: '✅ Selesai'  },
+  ditutup:  { pillCls: 'cspill-ditutup',  label: '⚫ Ditutup'  },
+};
+
+const urgencyCfg = {
+  rendah:  { cls: 'urgency-rendah', label: '🟢 Rendah'  },
+  sedang:  { cls: 'urgency-sedang', label: '🟡 Sedang'  },
+  tinggi:  { cls: 'urgency-tinggi', label: '🔴 Tinggi'  },
+  kritis:  { cls: 'urgency-kritis', label: '🚨 Kritis'  },
+};
+
+function updateNewComplaintBadge() {
+  const count = getComplaints().filter(c => c.status === 'baru').length;
+  const badge = document.getElementById('newComplaintBadge');
+  badge.style.display = count > 0 ? 'inline-block' : 'none';
+  badge.textContent   = count;
+}
+
+function filterComplaints(filter) {
+  activeComplaintFilter = filter;
+  document.querySelectorAll('#complaintFilterChips .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.filter === filter);
+  });
+  renderComplaintsSection();
+}
+
+function renderComplaintStats() {
+  const all = getComplaints();
+  const stats = [
+    { icon:'🟠', label:'Baru',      val: all.filter(c => c.status === 'baru').length,     color:'var(--orange)'  },
+    { icon:'🔵', label:'Diproses',  val: all.filter(c => c.status === 'diproses').length, color:'#0891B2'        },
+    { icon:'✅', label:'Selesai',   val: all.filter(c => c.status === 'selesai').length,  color:'var(--green)'   },
+    { icon:'⭐', label:'Rata-rata Rating',
+      val: (() => {
+        const rated = all.filter(c => c.rating);
+        if (!rated.length) return '—';
+        return (rated.reduce((s, c) => s + c.rating, 0) / rated.length).toFixed(1) + ' / 5';
+      })(),
+      color:'#B45309', isText: true },
+  ];
+  document.getElementById('complaintStatRow').innerHTML = stats.map(s => `
+    <div class="stat-card" data-icon="${s.icon}">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value" style="font-size:${s.isText ? '1.3rem' : '2rem'};color:${s.color}">${s.val}</div>
+    </div>`
+  ).join('');
+}
+
+function renderComplaintsSection() {
+  renderComplaintStats();
+
+  let complaints = getComplaints().reverse();
+
+  if (activeComplaintFilter === 'kritis') {
+    complaints = complaints.filter(c => c.urgency === 'kritis');
+  } else if (activeComplaintFilter) {
+    complaints = complaints.filter(c => c.status === activeComplaintFilter);
+  }
+
+  const el = document.getElementById('complaintCards');
+
+  if (!complaints.length) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:4rem 2rem;color:var(--text-light)">
+        <div style="font-size:3rem;margin-bottom:1rem">📣</div>
+        <h3 style="font-family:'Playfair Display',serif;color:var(--brown)">Tidak ada pengaduan</h3>
+        <p>Belum ada pengaduan yang sesuai dengan filter ini</p>
+      </div>`;
+    updateNewComplaintBadge();
+    return;
+  }
+
+  el.innerHTML = complaints.map(c => {
+    const st  = complaintStatusCfg[c.status] || complaintStatusCfg.baru;
+    const urg = urgencyCfg[c.urgency]        || urgencyCfg.sedang;
+
+    // Riwayat balasan
+    const repliesHTML = (c.replies || []).map(r => `
+      <div class="cc-reply-bubble">
+        <div class="rb-meta">💬 Admin · ${new Date(r.time).toLocaleString('id-ID')}</div>
+        ${r.text}
+      </div>`
+    ).join('');
+
+    // Rating dari user
+    const ratingHTML = c.rating
+      ? `<div class="cc-rating">
+           <span class="cc-stars">${'⭐'.repeat(c.rating)}</span>
+           <span>${c.rating}/5 — ${c.ratingComment || 'Tidak ada komentar'}</span>
+         </div>`
+      : '';
+
+    // Referensi transaksi
+    const refHTML = c.reference
+      ? `<div class="cc-ref">🔗 <strong>Ref:</strong> ${c.reference}</div>`
+      : '';
+
+    return `
+      <div class="complaint-card cs-${c.status}" id="ccard-${c.id}">
+
+        <div class="cc-header">
+          <div class="cc-left">
+            <div class="cc-title">${c.title}</div>
+            <div class="cc-user">👤 ${c.userName} · ${c.userEmail} · 📱 ${c.phone}</div>
+          </div>
+          <div class="cc-right">
+            <span class="cc-status-pill ${st.pillCls}">${st.label}</span>
+            <div class="cc-date">${new Date(c.date).toLocaleString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</div>
+          </div>
+        </div>
+
+        <div class="cc-meta">
+          <span class="cc-topic-tag">${c.topic}</span>
+          <span class="cc-urgency ${urg.cls}">${urg.label}</span>
+          <span style="font-size:0.78rem;color:var(--text-light)">Harapan: ${c.expectation}</span>
+        </div>
+
+        ${refHTML}
+        <div class="cc-body">${c.desc}</div>
+
+        ${repliesHTML ? `<div class="cc-replies">${repliesHTML}</div>` : ''}
+        ${ratingHTML}
+
+        <!-- Tombol aksi -->
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;margin-top:0.75rem">
+          <button class="btn-icon btn-edit"    onclick="toggleComplaintReply(${c.id})">💬 Balas</button>
+          <select class="cc-status-select" onchange="updateComplaintStatus(${c.id}, this.value)">
+            <option value="baru"     ${c.status==='baru'     ?'selected':''}>⏳ Baru</option>
+            <option value="diproses" ${c.status==='diproses' ?'selected':''}>🔵 Diproses</option>
+            <option value="selesai"  ${c.status==='selesai'  ?'selected':''}>✅ Selesai</option>
+            <option value="ditutup"  ${c.status==='ditutup'  ?'selected':''}>⚫ Tutup</option>
+          </select>
+        </div>
+
+        <!-- Area balas -->
+        <div class="cc-reply-area" id="ccra-${c.id}">
+          <div style="font-size:0.78rem;font-weight:600;color:var(--text-light);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">Tulis Balasan</div>
+          <textarea class="cc-reply-textarea" id="ccrt-${c.id}"
+            placeholder="Sampaikan respons, solusi, atau informasi tambahan kepada ${c.userName}..."></textarea>
+          <div class="cc-reply-actions">
+            <button class="btn-icon btn-approve" onclick="sendComplaintReply(${c.id})">📤 Kirim Balasan</button>
+            <button class="btn-icon"             onclick="toggleComplaintReply(${c.id})" style="background:var(--warm);color:var(--brown-dark)">Batal</button>
+          </div>
+        </div>
+
+      </div>`;
+  }).join('');
+
+  updateNewComplaintBadge();
+}
+
+function toggleComplaintReply(id) {
+  document.querySelectorAll('.cc-reply-area.open').forEach(el => el.classList.remove('open'));
+  document.getElementById('ccra-' + id).classList.add('open');
+}
+
+function sendComplaintReply(id) {
+  const text = document.getElementById('ccrt-' + id).value.trim();
+  if (!text) { showToast('⚠️ Balasan tidak boleh kosong!'); return; }
+
+  const complaints = getComplaints();
+  const idx        = complaints.findIndex(c => c.id === id);
+  if (idx === -1)  return;
+
+  const c = complaints[idx];
+  if (!c.replies) c.replies = [];
+  c.replies.push({ text, time: new Date().toISOString() });
+  // Auto-ubah status ke diproses jika masih baru
+  if (c.status === 'baru') c.status = 'diproses';
+  c.userRead = false; // tandai belum dibaca oleh user
+  complaints[idx] = c;
+  saveComplaints(complaints);
+
+  // Notifikasi ke pengguna
+  const notifs = getNotifs();
+  notifs.push({
+    id:      Date.now(),
+    userId:  c.userId,
+    title:   '💬 Admin membalas pengaduan Anda',
+    message: `Pengaduan "${c.title}" mendapat balasan: "${text.substring(0, 80)}${text.length > 80 ? '...' : ''}"`,
+    type:    'approved',
+    read:    false,
+    time:    new Date().toISOString(),
+  });
+  saveNotifs(notifs);
+
+  showToast('✅ Balasan berhasil dikirim!');
+  updateNewComplaintBadge();
+  renderComplaintsSection();
+}
+
+function updateComplaintStatus(id, newStatus) {
+  const complaints = getComplaints();
+  const idx        = complaints.findIndex(c => c.id === id);
+  if (idx === -1)  return;
+
+  const c          = complaints[idx];
+  const oldStatus  = c.status;
+  if (oldStatus === newStatus) return;
+
+  complaints[idx].status   = newStatus;
+  complaints[idx].userRead = false;
+  saveComplaints(complaints);
+
+  // Notifikasi perubahan status ke pengguna
+  const statusLabel = { baru:'Baru', diproses:'Sedang Diproses', selesai:'Selesai', ditutup:'Ditutup' };
+  const notifs = getNotifs();
+  notifs.push({
+    id:      Date.now(),
+    userId:  c.userId,
+    title:   `📣 Status Pengaduan Diperbarui`,
+    message: `Pengaduan "${c.title}" kini berstatus: ${statusLabel[newStatus] || newStatus}.`,
+    type:    newStatus === 'selesai' ? 'approved' : 'pending',
+    read:    false,
+    time:    new Date().toISOString(),
+  });
+  saveNotifs(notifs);
+
+  showToast(`✅ Status pengaduan diperbarui ke "${statusLabel[newStatus]}"`);
+  updateNewComplaintBadge();
+  renderComplaintsSection();
+}
+
+// ==============================================================
 // KELUAR
 // ==============================================================
 
@@ -546,3 +1002,5 @@ function logout() {
 // ==============================================================
 renderOverview();
 updateNewReportBadge();
+updateNewBoardingBadge();
+updateNewComplaintBadge();

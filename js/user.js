@@ -50,10 +50,12 @@ function showSection(name) {
   document.getElementById('nav-' + name).classList.add('active');
 
   const renderers = {
-    'gallery':      renderGallery,
-    'my-adoptions': renderMyAdoptions,
+    'gallery':       renderGallery,
+    'my-adoptions':  renderMyAdoptions,
     'notifications': renderNotifications,
-    'reports':      renderReportsSection,
+    'reports':       renderReportsSection,
+    'boardings':     renderBoardingsSection,
+    'complaints':    renderComplaintsSection,
   };
   if (renderers[name]) renderers[name]();
 }
@@ -69,6 +71,7 @@ function renderGallery() {
   const status  = document.getElementById('filterStatus').value  || '';
 
   const animals = getAnimals().filter(a =>
+    a.status !== 'adopted' &&
     (!query   || a.name.toLowerCase().includes(query) || a.breed.toLowerCase().includes(query)) &&
     (!species || a.species === species) &&
     (!status  || a.status  === status)
@@ -495,6 +498,429 @@ function submitReport() {
 }
 
 // ==============================================================
+// PENITIPAN HEWAN
+// ==============================================================
+
+/* ---- Konstanta tarif ---- */
+const BOARDING_RATE_PER_DAY = 50000; // Rp 50.000/hari
+
+/* ---- Hitung selisih hari antara dua tanggal ---- */
+function calcDays(checkIn, checkOut) {
+  const d1 = new Date(checkIn);
+  const d2 = new Date(checkOut);
+  return Math.max(0, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+}
+
+function formatRupiah(n) {
+  return 'Rp ' + n.toLocaleString('id-ID');
+}
+
+/* ---- Render daftar pengajuan penitipan pengguna ini ---- */
+function renderBoardingsSection() {
+  const boardings = getBoardings()
+    .filter(b => b.userId === session.id)
+    .reverse();
+
+  const el = document.getElementById('boardingList');
+
+  if (!boardings.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">🏡</span>
+        <h3>Belum ada pengajuan penitipan</h3>
+        <p>Klik "Ajukan Penitipan Baru" untuk memulai</p>
+      </div>`;
+    return;
+  }
+
+  const statusMap = {
+    menunggu:    { cls: 'bpill-menunggu',    label: '⏳ Menunggu'    },
+    disetujui:   { cls: 'bpill-disetujui',   label: '✅ Disetujui'   },
+    ditolak:     { cls: 'bpill-ditolak',     label: '❌ Ditolak'     },
+    berlangsung: { cls: 'bpill-berlangsung', label: '🔵 Berlangsung' },
+    selesai:     { cls: 'bpill-selesai',     label: '🎉 Selesai'     },
+  };
+
+  const speciesEmoji = { Kucing:'🐱', Anjing:'🐕', Kelinci:'🐇', Burung:'🦜', Hamster:'🐹', Lainnya:'🐾' };
+
+  el.innerHTML = boardings.map(b => {
+    const st       = statusMap[b.status] || { cls:'', label: b.status };
+    const emoji    = speciesEmoji[b.petSpecies] || '🐾';
+    const days     = calcDays(b.checkIn, b.checkOut);
+    const services = (b.services || []).map(s => `<span style="font-size:0.78rem;color:var(--green);background:#EDF7F1;padding:2px 8px;border-radius:99px;border:1px solid #B5D9C2;">${s}</span>`).join('');
+
+    return `
+      <div class="boarding-item status-${b.status}">
+        <div class="boarding-item-header">
+          <div class="bi-left">
+            <span class="bi-emoji">${emoji}</span>
+            <div>
+              <div class="bi-animal-name">${b.petName}</div>
+              <div class="bi-pet-name">${b.petBreed} · ${b.petSpecies} · ${b.petAge}</div>
+            </div>
+          </div>
+          <span class="boarding-status-pill ${st.cls}">${st.label}</span>
+        </div>
+
+        <div class="boarding-dates">
+          <span class="boarding-date-tag">📥 Masuk: <strong>${new Date(b.checkIn).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})}</strong></span>
+          <span class="boarding-date-tag">📤 Keluar: <strong>${new Date(b.checkOut).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})}</strong></span>
+          <span class="boarding-date-tag">💰 <strong>${formatRupiah(days * BOARDING_RATE_PER_DAY)}</strong></span>
+        </div>
+
+        ${days > 0 ? `<div class="boarding-duration">🗓 ${days} hari penitipan</div>` : ''}
+        ${services ? `<div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.6rem">${services}</div>` : ''}
+        ${b.notes    ? `<div class="boarding-note">📝 <em>${b.notes}</em></div>` : ''}
+        ${b.adminNote ? `<div class="boarding-admin-note"><strong>💬 Catatan Admin:</strong> ${b.adminNote}</div>` : ''}
+        <div style="font-size:0.75rem;color:var(--text-light);margin-top:0.5rem">Diajukan: ${new Date(b.date).toLocaleString('id-ID')}</div>
+      </div>`;
+  }).join('');
+}
+
+/* ---- Buka modal penitipan ---- */
+function openBoardingModal() {
+  // Set default tanggal: hari ini dan besok
+  const today    = new Date();
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const fmt      = d => d.toISOString().split('T')[0];
+
+  document.getElementById('bPetName').value      = '';
+  document.getElementById('bPetBreed').value     = '';
+  document.getElementById('bPetAge').value       = '';
+  document.getElementById('bPetSpecies').value   = 'Kucing';
+  document.getElementById('bCheckIn').value      = fmt(today);
+  document.getElementById('bCheckOut').value     = fmt(tomorrow);
+  document.getElementById('bNotes').value        = '';
+  document.getElementById('bContactPhone').value = '';
+  document.querySelectorAll('#boardingModal .service-option input')
+    .forEach(cb => cb.checked = false);
+
+  updatePriceEstimate();
+  document.getElementById('boardingModal').classList.add('open');
+}
+
+function closeBoardingModal() {
+  document.getElementById('boardingModal').classList.remove('open');
+}
+
+/* ---- Perbarui estimasi harga secara real-time ---- */
+function updatePriceEstimate() {
+  const ci  = document.getElementById('bCheckIn').value;
+  const co  = document.getElementById('bCheckOut').value;
+  const box = document.getElementById('priceEstimate');
+
+  if (!ci || !co) { box.style.display = 'none'; return; }
+
+  const days = calcDays(ci, co);
+  if (days <= 0) { box.style.display = 'none'; return; }
+
+  box.style.display = 'flex';
+  document.getElementById('priceDurationLabel').textContent = `${days} hari × ${formatRupiah(BOARDING_RATE_PER_DAY)}`;
+  document.getElementById('priceValue').textContent         = formatRupiah(days * BOARDING_RATE_PER_DAY);
+}
+
+/* ---- Submit pengajuan penitipan ---- */
+function submitBoarding() {
+  const petName      = document.getElementById('bPetName').value.trim();
+  const petSpecies   = document.getElementById('bPetSpecies').value;
+  const petBreed     = document.getElementById('bPetBreed').value.trim();
+  const petAge       = document.getElementById('bPetAge').value.trim();
+  const checkIn      = document.getElementById('bCheckIn').value;
+  const checkOut     = document.getElementById('bCheckOut').value;
+  const notes        = document.getElementById('bNotes').value.trim();
+  const contactPhone = document.getElementById('bContactPhone').value.trim();
+  const services     = [...document.querySelectorAll('#boardingModal .service-option input:checked')]
+                         .map(cb => cb.value);
+
+  if (!petName)      { showToast('⚠️ Nama hewan harus diisi!');           return; }
+  if (!petBreed)     { showToast('⚠️ Ras/jenis hewan harus diisi!');      return; }
+  if (!checkIn || !checkOut) { showToast('⚠️ Tanggal masuk dan keluar harus diisi!'); return; }
+
+  const days = calcDays(checkIn, checkOut);
+  if (days <= 0)     { showToast('⚠️ Tanggal keluar harus setelah tanggal masuk!'); return; }
+  if (!contactPhone) { showToast('⚠️ Nomor HP harus diisi!');              return; }
+
+  const boardings = getBoardings();
+  const newBoarding = {
+    id:           Date.now(),
+    userId:       session.id,
+    userName:     session.name,
+    userEmail:    session.email,
+    petName, petSpecies, petBreed, petAge,
+    checkIn, checkOut,
+    days,
+    totalCost:    days * BOARDING_RATE_PER_DAY,
+    services,
+    notes,
+    contactPhone,
+    status:       'menunggu',
+    adminNote:    '',
+    date:         new Date().toISOString(),
+  };
+
+  boardings.push(newBoarding);
+  saveBoardings(boardings);
+
+  // Notifikasi ke pengguna
+  addNotification(
+    session.id,
+    '🏡 Pengajuan Penitipan Dikirim',
+    `Pengajuan penitipan untuk ${petName} (${days} hari) berhasil dikirim. Tunggu konfirmasi dari admin.`,
+    'pending'
+  );
+
+  closeBoardingModal();
+  showToast('🎉 Pengajuan penitipan berhasil dikirim!');
+  renderBoardingsSection();
+}
+
+// ==============================================================
+// PENGADUAN / KOMPLAIN
+// ==============================================================
+
+/* ---- Konfigurasi tampilan ---- */
+const complaintStatusMap = {
+  baru:     { pillCls: 'cspill-baru',     label: '⏳ Baru',      stepIdx: 0 },
+  diproses: { pillCls: 'cspill-diproses', label: '🔵 Diproses',  stepIdx: 1 },
+  selesai:  { pillCls: 'cspill-selesai',  label: '✅ Selesai',   stepIdx: 2 },
+  ditutup:  { pillCls: 'cspill-ditutup',  label: '⚫ Ditutup',   stepIdx: 2 },
+};
+
+const urgencyMap = {
+  rendah:  { cls: 'urgency-rendah', label: '🟢 Rendah'  },
+  sedang:  { cls: 'urgency-sedang', label: '🟡 Sedang'  },
+  tinggi:  { cls: 'urgency-tinggi', label: '🔴 Tinggi'  },
+  kritis:  { cls: 'urgency-kritis', label: '🚨 Kritis'  },
+};
+
+const STEP_LABELS = ['Dikirim', 'Diproses', 'Selesai'];
+
+/* ---- Badge di sidebar ---- */
+function updateComplaintBadge() {
+  const count = getComplaints().filter(
+    c => c.userId === session.id && c.replies && c.replies.length > 0 && !c.userRead
+  ).length;
+  const badge = document.getElementById('complaintBadge');
+  badge.style.display = count > 0 ? 'inline-block' : 'none';
+}
+
+/* ---- Render daftar pengaduan pengguna ---- */
+function renderComplaintsSection() {
+  // Tandai balasan yang belum dibaca sebagai sudah dibaca
+  const allC = getComplaints();
+  let changed = false;
+  allC.forEach(c => {
+    if (c.userId === session.id && !c.userRead && c.replies && c.replies.length > 0) {
+      c.userRead = true;
+      changed = true;
+    }
+  });
+  if (changed) { saveComplaints(allC); updateComplaintBadge(); }
+
+  const complaints = getComplaints()
+    .filter(c => c.userId === session.id)
+    .reverse();
+
+  const el = document.getElementById('complaintList');
+
+  if (!complaints.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">💬</span>
+        <h3>Belum ada pengaduan</h3>
+        <p>Klik "Buat Pengaduan Baru" jika Anda memiliki masalah yang perlu diselesaikan</p>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = complaints.map(c => _buildComplaintItemHTML(c)).join('');
+}
+
+function _buildComplaintItemHTML(c) {
+  const st  = complaintStatusMap[c.status] || complaintStatusMap.baru;
+  const urg = urgencyMap[c.urgency]        || urgencyMap.sedang;
+  const stepIdx = st.stepIdx;
+
+  // Stepper HTML
+  const steps = STEP_LABELS.map((lbl, i) => {
+    const cls = i < stepIdx ? 'done' : i === stepIdx ? 'active' : '';
+    return `<div class="cp-step ${cls}"><div class="cp-dot"></div><div class="cp-label">${lbl}</div></div>`;
+  }).join('');
+
+  // Balasan admin
+  const repliesHTML = (c.replies || []).map(r => `
+    <div style="background:#F0F7FF;border-left:3px solid #60A5FA;border-radius:0 0.5rem 0.5rem 0;
+                padding:0.65rem 1rem;font-size:0.84rem;color:#1E40AF;line-height:1.55;margin-bottom:0.4rem">
+      <div style="font-size:0.72rem;color:#93C5FD;margin-bottom:0.2rem">💬 Admin · ${new Date(r.time).toLocaleString('id-ID')}</div>
+      ${r.text}
+    </div>`
+  ).join('');
+
+  // Rating
+  const ratingHTML = c.rating
+    ? `<div style="font-size:0.78rem;color:var(--text-light);margin-top:0.4rem">
+         Penilaian Anda: ${'⭐'.repeat(c.rating)} (${c.ratingComment || '—'})
+       </div>`
+    : (c.status === 'selesai'
+        ? `<button style="margin-top:0.5rem;padding:5px 14px;background:var(--orange);color:white;border:none;border-radius:0.5rem;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer"
+             onclick="openRatingModal(${c.id})">⭐ Beri Penilaian</button>`
+        : '');
+
+  // Referensi
+  const refHTML = c.reference
+    ? `<div style="font-size:0.78rem;color:var(--text-light);margin-bottom:0.3rem">🔗 Ref: <strong>${c.reference}</strong></div>`
+    : '';
+
+  return `
+    <div class="complaint-item cs-${c.status}">
+      <div class="ci-header">
+        <div class="ci-left">
+          <div class="ci-title">${c.title}</div>
+          <div class="ci-meta">
+            <span class="ci-topic-tag">${c.topic}</span>
+            <span class="urgency-pill ${urg.cls}">${urg.label}</span>
+            <span>Harapan: ${c.expectation}</span>
+          </div>
+        </div>
+        <span class="complaint-status-pill ${st.pillCls}">${st.label}</span>
+      </div>
+
+      <!-- Progress stepper -->
+      <div class="complaint-progress">${steps}</div>
+
+      ${refHTML}
+      <div class="ci-desc">${c.desc}</div>
+      ${repliesHTML}
+      <div class="ci-footer">
+        <span>📅 ${new Date(c.date).toLocaleString('id-ID')}</span>
+        <span>📱 ${c.phone}</span>
+      </div>
+      ${ratingHTML}
+    </div>`;
+}
+
+/* ---- Buka modal pengaduan ---- */
+function openComplaintModal() {
+  // Reset semua field
+  document.getElementById('cTitle').value       = '';
+  document.getElementById('cTopic').value       = 'Adopsi';
+  document.getElementById('cUrgency').value     = 'sedang';
+  document.getElementById('cDesc').value        = '';
+  document.getElementById('cExpectation').value = 'Informasi / Klarifikasi';
+  document.getElementById('cPhone').value       = '';
+
+  // Isi dropdown referensi dari adopsi & penitipan milik user ini
+  const refSelect  = document.getElementById('cReference');
+  const adoptions  = getAdoptions().filter(a => a.userId === session.id);
+  const boardings  = getBoardings().filter(b => b.userId === session.id);
+
+  let opts = `<option value="">— Tidak terkait transaksi tertentu —</option>`;
+  adoptions.forEach(a => {
+    opts += `<option value="Adopsi #${String(a.id).slice(-5)} — ${a.animalName}">Adopsi: ${a.animalName} (${a.status})</option>`;
+  });
+  boardings.forEach(b => {
+    opts += `<option value="Penitipan #${String(b.id).slice(-5)} — ${b.petName}">Penitipan: ${b.petName} (${b.status})</option>`;
+  });
+  refSelect.innerHTML = opts;
+
+  document.getElementById('complaintModal').classList.add('open');
+}
+
+function closeComplaintModal() {
+  document.getElementById('complaintModal').classList.remove('open');
+}
+
+/* ---- Submit pengaduan ---- */
+function submitComplaint() {
+  const title       = document.getElementById('cTitle').value.trim();
+  const topic       = document.getElementById('cTopic').value;
+  const urgency     = document.getElementById('cUrgency').value;
+  const reference   = document.getElementById('cReference').value;
+  const desc        = document.getElementById('cDesc').value.trim();
+  const expectation = document.getElementById('cExpectation').value;
+  const phone       = document.getElementById('cPhone').value.trim();
+
+  if (!title)  { showToast('⚠️ Judul pengaduan harus diisi!');       return; }
+  if (!desc)   { showToast('⚠️ Deskripsi masalah harus diisi!');     return; }
+  if (!phone)  { showToast('⚠️ Nomor HP harus diisi!');              return; }
+
+  const complaints = getComplaints();
+  const newC = {
+    id:          Date.now(),
+    userId:      session.id,
+    userName:    session.name,
+    userEmail:   session.email,
+    title, topic, urgency, reference, desc, expectation, phone,
+    status:      'baru',
+    replies:     [],
+    rating:      null,
+    ratingComment: null,
+    userRead:    true,
+    date:        new Date().toISOString(),
+  };
+  complaints.push(newC);
+  saveComplaints(complaints);
+
+  // Notifikasi konfirmasi ke pengguna
+  addNotification(
+    session.id,
+    '📣 Pengaduan Dikirim',
+    `Pengaduan "${title}" telah diterima. Tim kami akan merespons dalam 1×24 jam.`,
+    'pending'
+  );
+
+  closeComplaintModal();
+  showToast('📣 Pengaduan berhasil dikirim!');
+  renderComplaintsSection();
+}
+
+/* ---- Rating kepuasan ---- */
+let activeRatingComplaintId = null;
+let selectedRating          = 0;
+
+const ratingLabels = ['', 'Sangat Kecewa', 'Kecewa', 'Cukup', 'Puas', 'Sangat Puas'];
+
+function openRatingModal(complaintId) {
+  activeRatingComplaintId = complaintId;
+  selectedRating          = 0;
+  document.getElementById('ratingComment').value = '';
+  document.getElementById('ratingLabel').textContent = '';
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('ratingModal').classList.add('open');
+}
+
+function closeRatingModal() {
+  document.getElementById('ratingModal').classList.remove('open');
+  activeRatingComplaintId = null;
+}
+
+function setRating(val) {
+  selectedRating = val;
+  document.querySelectorAll('.star-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.val) <= val);
+  });
+  document.getElementById('ratingLabel').textContent = ratingLabels[val] || '';
+}
+
+function submitRating() {
+  if (!selectedRating)               { showToast('⚠️ Pilih bintang terlebih dahulu!'); return; }
+  if (!activeRatingComplaintId)      { return; }
+
+  const comment    = document.getElementById('ratingComment').value.trim();
+  const complaints = getComplaints();
+  const idx        = complaints.findIndex(c => c.id === activeRatingComplaintId);
+  if (idx === -1)  { return; }
+
+  complaints[idx].rating        = selectedRating;
+  complaints[idx].ratingComment = comment;
+  saveComplaints(complaints);
+
+  closeRatingModal();
+  showToast('⭐ Terima kasih atas penilaian Anda!');
+  renderComplaintsSection();
+}
+
+// ==============================================================
 // KELUAR
 // ==============================================================
 
@@ -510,3 +936,4 @@ function logout() {
 // Render galeri saat pertama kali halaman dimuat
 renderGallery();
 updateNotifBadge();
+updateComplaintBadge();

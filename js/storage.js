@@ -10,7 +10,9 @@ function getAdoptions() { return JSON.parse(localStorage.getItem('pawcare_adopti
 function getUsers()     { return JSON.parse(localStorage.getItem('pawcare_users')         || '[]'); }
 function getNotifs()    { return JSON.parse(localStorage.getItem('pawcare_notifications') || '[]'); }
 function getReports()   { return JSON.parse(localStorage.getItem('pawcare_reports')       || '[]'); }
-function getSession()   { return JSON.parse(localStorage.getItem('pawcare_session')       || 'null'); }
+function getBoardings()   { return JSON.parse(localStorage.getItem('pawcare_boardings')     || '[]'); }
+function getComplaints()  { return JSON.parse(localStorage.getItem('pawcare_complaints')   || '[]'); }
+function getSession()     { return JSON.parse(localStorage.getItem('pawcare_session')       || 'null'); }
 
 // ---- Setter ----
 function saveAnimals(data)   { localStorage.setItem('pawcare_animals',       JSON.stringify(data)); }
@@ -18,7 +20,9 @@ function saveAdoptions(data) { localStorage.setItem('pawcare_adoptions',     JSO
 function saveUsers(data)     { localStorage.setItem('pawcare_users',         JSON.stringify(data)); }
 function saveNotifs(data)    { localStorage.setItem('pawcare_notifications', JSON.stringify(data)); }
 function saveReports(data)   { localStorage.setItem('pawcare_reports',       JSON.stringify(data)); }
-function saveSession(data)   { localStorage.setItem('pawcare_session',       JSON.stringify(data)); }
+function saveBoardings(data)   { localStorage.setItem('pawcare_boardings',   JSON.stringify(data)); }
+function saveComplaints(data)  { localStorage.setItem('pawcare_complaints', JSON.stringify(data)); }
+function saveSession(data)     { localStorage.setItem('pawcare_session',     JSON.stringify(data)); }
 function clearSession()      { localStorage.removeItem('pawcare_session'); }
 
 // ---- Inisialisasi data demo ----
@@ -52,6 +56,8 @@ function initDemoData() {
   if (!localStorage.getItem('pawcare_adoptions'))     saveAdoptions([]);
   if (!localStorage.getItem('pawcare_notifications')) saveNotifs([]);
   if (!localStorage.getItem('pawcare_reports'))       saveReports([]);
+  if (!localStorage.getItem('pawcare_boardings'))     saveBoardings([]);
+  if (!localStorage.getItem('pawcare_complaints'))   saveComplaints([]);
 }
 
 // Jalankan inisialisasi saat file ini dimuat
