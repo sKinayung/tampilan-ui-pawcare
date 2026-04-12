@@ -230,14 +230,37 @@ a {
 /* ---- Layout Sidebar ---- */
 .sidebar {
   width: 260px;
-  min-height: 100vh;
-  padding: 2rem 1.5rem;
+  height: 100vh;
+  padding: 0;
   position: fixed;
   top: 0;
   left: 0;
   display: flex;
   flex-direction: column;
   z-index: 100;
+  overflow: hidden;
+}
+
+/* Area scrollable: logo + nav items */
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2rem 1.5rem 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 99px;
+}
+
+/* Area bawah: user info + logout — selalu terlihat */
+.sidebar-bottom {
+  flex-shrink: 0;
+  padding: 1rem 1.5rem 1.5rem;
+  border-top: 1px solid transparent; /* warna di-override tiap halaman */
 }
 
 .main-content {
@@ -247,7 +270,7 @@ a {
   min-height: 100vh;
 }
 
-/* ---- Sidebar Nav Item ---- */
+/* ---- Sidebar Nav Item — reset browser default ---- */
 .nav-item {
   display: flex;
   align-items: center;
@@ -255,15 +278,58 @@ a {
   padding: 0.75rem 1rem;
   border-radius: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, color 0.2s;
   font-size: 0.92rem;
   font-weight: 500;
   margin-bottom: 0.25rem;
+  /* Reset browser button defaults */
   border: none;
-  background: none;
+  background: transparent;
+  background-color: transparent;
+  outline: none;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   text-align: left;
+  font-family: 'DM Sans', sans-serif;
 }
+
+/* ---- Hamburger toggle (hidden on desktop) ---- */
+.hamburger {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 200;
+  width: 42px;
+  height: 42px;
+  border-radius: 0.65rem;
+  border: none;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background 0.2s;
+}
+.hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 99px;
+  transition: all 0.25s;
+}
+
+/* Overlay gelap saat sidebar terbuka di mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(44,36,22,0.5);
+  z-index: 99;
+}
+.sidebar-overlay.open { display: block; }
 
 /* ---- Page Header ---- */
 .page-header {
@@ -308,7 +374,30 @@ a {
 }
 
 @media (max-width: 768px) {
-  .sidebar       { transform: translateX(-100%); }
-  .main-content  { margin-left: 0; padding: 1.5rem; }
-  .form-row      { grid-template-columns: 1fr; }
+  /* Sembunyikan sidebar, tampilkan hamburger */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .hamburger {
+    display: flex;
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 1.5rem;
+    padding-top: 4.5rem; /* ruang untuk hamburger */
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Pastikan hamburger & overlay tidak muncul di desktop */
+  .hamburger       { display: none !important; }
+  .sidebar-overlay { display: none !important; }
+  .sidebar         { transform: translateX(0) !important; }
 }

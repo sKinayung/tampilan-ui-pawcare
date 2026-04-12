@@ -9,7 +9,20 @@
 body { display: flex; }
 
 /* ---- Sidebar admin ---- */
-.sidebar { background: var(--admin-accent); }
+.sidebar {
+  background: var(--admin-accent);
+}
+
+/* Pastikan scroll area inherit background sidebar */
+.sidebar-scroll {
+  background: var(--admin-accent);
+}
+
+/* Border bottom yang sesuai warna admin */
+.sidebar-bottom {
+  border-top-color: rgba(255,255,255,0.1);
+  background: var(--admin-accent);
+}
 
 .sidebar-logo {
   font-size: 1.3rem;
@@ -60,13 +73,7 @@ body { display: flex; }
   text-align: center;
 }
 
-/* ---- Bagian bawah sidebar ---- */
-.sidebar-bottom {
-  margin-top: auto;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255,255,255,0.1);
-}
-
+/* ---- Info admin di sidebar ---- */
 .admin-info {
   display: flex;
   align-items: center;
@@ -745,3 +752,339 @@ tr:hover td      { background: rgba(74,124,89,0.03); }
   margin-bottom: 1.75rem;
 }
 @media (max-width: 1200px) { .complaint-stat-row { grid-template-columns: 1fr 1fr; } }
+
+/* ============================================================
+   SUMBANG HEWAN — SISI ADMIN
+   ============================================================ */
+
+/* ---- Kartu sumbang di admin ---- */
+.donation-admin-cards { display: flex; flex-direction: column; gap: 1rem; }
+
+.donation-admin-card {
+  background: var(--white);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(92,74,42,0.06);
+  border-left: 4px solid var(--brown);
+  transition: box-shadow 0.2s;
+}
+.donation-admin-card:hover           { box-shadow: 0 6px 20px rgba(92,74,42,0.1); }
+.donation-admin-card.dst-menunggu    { border-left-color: var(--orange); background: #FFFDF5; }
+.donation-admin-card.dst-disetujui   { border-left-color: var(--green); }
+.donation-admin-card.dst-ditolak     { border-left-color: var(--red); }
+.donation-admin-card.dst-diadopsi    { border-left-color: #6D28D9; }
+
+/* Header */
+.dac-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+.dac-left  { display: flex; align-items: center; gap: 0.85rem; }
+.dac-emoji { font-size: 2.4rem; flex-shrink: 0; }
+.dac-name  { font-size: 1rem; font-weight: 700; color: var(--brown-dark); }
+.dac-donor { font-size: 0.8rem; color: var(--text-light); margin-top: 0.15rem; }
+.dac-right { text-align: right; flex-shrink: 0; }
+.dac-date  { font-size: 0.72rem; color: var(--text-light); margin-top: 0.25rem; }
+
+/* Status pill */
+.dac-status {
+  padding: 3px 12px;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.dstp-menunggu  { background: #FEF3E2; color: #B45309; }
+.dstp-disetujui { background: #E8F5EE; color: #2C7A4E; }
+.dstp-ditolak   { background: #FEE2E2; color: #B91C1C; }
+.dstp-diadopsi  { background: #F3F0FF; color: #6D28D9; }
+
+/* Meta row */
+.dac-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.dac-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-light);
+  background: var(--cream);
+  padding: 3px 10px;
+  border-radius: 0.5rem;
+  border: 1px solid var(--warm);
+}
+.dac-tag strong { color: var(--text); }
+
+/* Kondisi kesehatan tag */
+.dac-health-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+.dac-health-tag {
+  padding: 3px 10px;
+  background: #EDF7F1;
+  color: var(--green);
+  border: 1px solid #B5D9C2;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dac-desc {
+  font-size: 0.87rem;
+  color: var(--text);
+  line-height: 1.65;
+  margin-bottom: 0.75rem;
+}
+
+/* Area proses (review) */
+.dac-process-area {
+  display: none;
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: var(--cream);
+  border-radius: 0.75rem;
+  border: 1.5px solid var(--warm);
+}
+.dac-process-area.open { display: block; }
+
+.dac-note-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid var(--warm);
+  border-radius: 0.65rem;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  color: var(--text);
+  resize: none;
+  min-height: 65px;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 0.75rem;
+}
+.dac-note-input:focus { border-color: var(--green); }
+
+/* Jika disetujui, form edit data hewan sebelum dipublish */
+.dac-publish-form {
+  display: none;
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #EDF7F1;
+  border-radius: 0.75rem;
+  border: 1.5px solid #B5D9C2;
+}
+.dac-publish-form.open { display: block; }
+.dac-publish-form .pf-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--green);
+  margin-bottom: 0.75rem;
+}
+
+/* Stat row donasi */
+.donation-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+@media (max-width: 1200px) { .donation-stat-row { grid-template-columns: 1fr 1fr; } }
+
+/* ============================================================
+   DONASI HEWAN — SISI ADMIN
+   ============================================================ */
+
+.donation-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+@media (max-width: 1200px) { .donation-stat-row { grid-template-columns: 1fr 1fr; } }
+
+.donation-cards { display: flex; flex-direction: column; gap: 1rem; }
+
+.donation-card {
+  background: var(--white);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(92,74,42,0.06);
+  border-left: 4px solid #7C3AED;
+  transition: box-shadow 0.2s;
+}
+.donation-card:hover               { box-shadow: 0 6px 20px rgba(92,74,42,0.1); }
+.donation-card.ds-menunggu         { border-left-color: var(--orange); background: #FFFDF5; }
+.donation-card.ds-disetujui        { border-left-color: var(--green); }
+.donation-card.ds-ditolak          { border-left-color: var(--red); opacity: 0.8; }
+
+/* Header */
+.dc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+.dc-left    { display: flex; align-items: center; gap: 0.85rem; }
+.dc-emoji   { font-size: 2.4rem; flex-shrink: 0; }
+.dc-name    { font-size: 1rem; font-weight: 700; color: var(--brown-dark); }
+.dc-user    { font-size: 0.8rem; color: var(--text-light); margin-top: 0.15rem; }
+.dc-right   { text-align: right; flex-shrink: 0; }
+.dc-date    { font-size: 0.73rem; color: var(--text-light); margin-top: 0.25rem; }
+
+/* Spesifikasi hewan */
+.dc-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+}
+.dc-spec-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-light);
+  background: var(--cream);
+  padding: 3px 10px;
+  border-radius: 0.5rem;
+  border: 1px solid var(--warm);
+}
+.dc-spec-tag strong { color: var(--text); }
+
+/* Kondisi badge */
+.dc-kondisi-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+.dc-kondisi-tag {
+  padding: 3px 10px;
+  background: #F5F3FF;
+  border: 1px solid #C4B5FD;
+  color: #5B21B6;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dc-desc {
+  font-size: 0.87rem;
+  color: var(--text);
+  line-height: 1.65;
+  margin-bottom: 0.75rem;
+}
+
+.dc-alasan {
+  font-size: 0.84rem;
+  color: var(--text-light);
+  background: var(--cream);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 0.75rem;
+  font-style: italic;
+  border: 1px solid var(--warm);
+  line-height: 1.6;
+}
+
+/* Status pill donasi */
+.dpill {
+  padding: 3px 12px;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.dpill-menunggu  { background: #FEF3E2; color: #B45309; }
+.dpill-disetujui { background: #E8F5EE; color: #2C7A4E; }
+.dpill-ditolak   { background: #FEE2E2; color: #B91C1C; }
+
+/* Area proses */
+.dc-process-area {
+  display: none;
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: var(--cream);
+  border-radius: 0.75rem;
+  border: 1.5px solid var(--warm);
+}
+.dc-process-area.open { display: block; }
+
+.dc-process-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.dc-note-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid var(--warm);
+  border-radius: 0.65rem;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  color: var(--text);
+  resize: none;
+  min-height: 70px;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 0.5rem;
+}
+.dc-note-input:focus { border-color: var(--green); }
+
+/* Form kustomisasi sebelum approve */
+.dc-customize-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.dc-field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.3rem;
+}
+.dc-field input, .dc-field select, .dc-field textarea {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1.5px solid var(--warm);
+  border-radius: 0.6rem;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.dc-field input:focus, .dc-field select:focus, .dc-field textarea:focus { border-color: var(--green); }
+
+.dc-process-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+
+/* ============================================================
+   HAMBURGER MENU — ADMIN
+   ============================================================ */
+.hamburger {
+  background: var(--admin-accent);
+}
+.hamburger span {
+  background: white;
+}
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }

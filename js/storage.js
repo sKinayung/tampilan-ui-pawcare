@@ -12,6 +12,7 @@ function getNotifs()    { return JSON.parse(localStorage.getItem('pawcare_notifi
 function getReports()   { return JSON.parse(localStorage.getItem('pawcare_reports')       || '[]'); }
 function getBoardings()   { return JSON.parse(localStorage.getItem('pawcare_boardings')     || '[]'); }
 function getComplaints()  { return JSON.parse(localStorage.getItem('pawcare_complaints')   || '[]'); }
+function getDonations()   { return JSON.parse(localStorage.getItem('pawcare_donations')    || '[]'); }
 function getSession()     { return JSON.parse(localStorage.getItem('pawcare_session')       || 'null'); }
 
 // ---- Setter ----
@@ -22,6 +23,7 @@ function saveNotifs(data)    { localStorage.setItem('pawcare_notifications', JSO
 function saveReports(data)   { localStorage.setItem('pawcare_reports',       JSON.stringify(data)); }
 function saveBoardings(data)   { localStorage.setItem('pawcare_boardings',   JSON.stringify(data)); }
 function saveComplaints(data)  { localStorage.setItem('pawcare_complaints', JSON.stringify(data)); }
+function saveDonations(data)   { localStorage.setItem('pawcare_donations',  JSON.stringify(data)); }
 function saveSession(data)     { localStorage.setItem('pawcare_session',     JSON.stringify(data)); }
 function clearSession()      { localStorage.removeItem('pawcare_session'); }
 
@@ -58,6 +60,7 @@ function initDemoData() {
   if (!localStorage.getItem('pawcare_reports'))       saveReports([]);
   if (!localStorage.getItem('pawcare_boardings'))     saveBoardings([]);
   if (!localStorage.getItem('pawcare_complaints'))   saveComplaints([]);
+  if (!localStorage.getItem('pawcare_donations'))    saveDonations([]);
 }
 
 // Jalankan inisialisasi saat file ini dimuat

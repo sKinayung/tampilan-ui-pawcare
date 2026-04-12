@@ -11,6 +11,17 @@ body {
   background: var(--brown-dark);
 }
 
+/* Pastikan scroll area inherit background sidebar */
+.sidebar-scroll {
+  background: var(--brown-dark);
+}
+
+/* Border bawah yang sesuai warna user */
+.sidebar-bottom {
+  border-top-color: rgba(245,240,232,0.15);
+  background: var(--brown-dark);
+}
+
 .sidebar-logo {
   font-size: 1.4rem;
   color: var(--cream);
@@ -57,13 +68,7 @@ body {
   text-align: center;
 }
 
-/* ---- Bagian bawah sidebar ---- */
-.sidebar-bottom {
-  margin-top: auto;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(245,240,232,0.15);
-}
-
+/* ---- Info user di sidebar ---- */
 .user-info {
   display: flex;
   align-items: center;
@@ -859,3 +864,355 @@ body {
   transition: all 0.15s;
 }
 .star-btn.selected, .star-btn:hover { filter: grayscale(0); opacity: 1; }
+
+/* ============================================================
+   SUMBANG HEWAN — SISI PENGGUNA
+   ============================================================ */
+
+/* ---- Tombol ajukan sumbang ---- */
+.btn-new-donation {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--brown);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 1.75rem;
+}
+.btn-new-donation:hover {
+  background: var(--brown-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139,111,71,0.3);
+}
+
+/* ---- Banner info sumbang ---- */
+.donation-info-banner {
+  background: linear-gradient(135deg, #F9F3EA, #F5EDE0);
+  border: 1px solid #E0C89A;
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  font-size: 0.88rem;
+  color: var(--text-light);
+  line-height: 1.65;
+}
+.donation-info-banner .dib-icon { font-size: 1.75rem; flex-shrink: 0; margin-top: 0.1rem; }
+.donation-info-banner strong    { color: var(--brown-dark); }
+
+/* ---- Grid kartu hewan sumbang milik user ---- */
+.donation-cards { display: flex; flex-direction: column; gap: 1rem; }
+
+.donation-item {
+  background: var(--white);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(92,74,42,0.07);
+  border-left: 4px solid var(--brown);
+  transition: box-shadow 0.2s;
+}
+.donation-item:hover { box-shadow: 0 6px 20px rgba(92,74,42,0.12); }
+.donation-item.dst-menunggu   { border-left-color: var(--orange); }
+.donation-item.dst-disetujui  { border-left-color: var(--green);  }
+.donation-item.dst-ditolak    { border-left-color: var(--red);    }
+.donation-item.dst-diadopsi   { border-left-color: #6D28D9;       }
+
+/* Header kartu sumbang */
+.di-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.di-left  { display: flex; align-items: center; gap: 0.85rem; }
+.di-emoji { font-size: 2.4rem; flex-shrink: 0; }
+.di-name  { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--brown-dark); }
+.di-meta  { font-size: 0.8rem; color: var(--text-light); margin-top: 0.15rem; }
+
+/* Status pill sumbang */
+.dstp {
+  padding: 4px 14px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.dstp-menunggu  { background: #FEF3E2; color: #B45309; }
+.dstp-disetujui { background: #E8F5EE; color: #2C7A4E; }
+.dstp-ditolak   { background: #FEE2E2; color: #B91C1C; }
+.dstp-diadopsi  { background: #F3F0FF; color: #6D28D9; }
+
+.di-desc {
+  font-size: 0.87rem;
+  color: var(--text-light);
+  line-height: 1.6;
+  margin-bottom: 0.65rem;
+}
+
+.di-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.65rem; }
+.di-tag {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  background: var(--cream);
+  border: 1px solid var(--warm);
+  border-radius: 99px;
+  color: var(--text-light);
+}
+
+.di-admin-note {
+  font-size: 0.84rem;
+  background: #F0F7FF;
+  border-left: 3px solid #60A5FA;
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.65rem 1rem;
+  color: #1E40AF;
+  margin-top: 0.5rem;
+  line-height: 1.55;
+}
+.di-admin-note strong { color: #1D4ED8; display: block; margin-bottom: 0.15rem; }
+
+/* ---- Kondisi kesehatan checkbox grid ---- */
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+  margin-top: 0.3rem;
+}
+.health-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 5px 10px;
+  border: 1.5px solid var(--warm);
+  border-radius: 0.6rem;
+  background: var(--cream);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  color: var(--text);
+  transition: all 0.15s;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.health-option:has(input:checked) {
+  border-color: var(--green);
+  background: #EDF7F1;
+  color: var(--green);
+  font-weight: 600;
+}
+.health-option input { accent-color: var(--green); }
+
+/* ---- Divider label bagian ---- */
+.form-section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brown);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--warm);
+  margin-top: 0.75rem;
+}
+
+/* ============================================================
+   DONASI HEWAN — SISI PENGGUNA
+   ============================================================ */
+
+.btn-new-donation {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #7C3AED;
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 1.75rem;
+}
+.btn-new-donation:hover {
+  background: #6D28D9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(124,58,237,0.28);
+}
+
+.donation-info-banner {
+  background: linear-gradient(135deg, #F5F3FF, #EDE9FE);
+  border: 1px solid #C4B5FD;
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  font-size: 0.88rem;
+  color: #4C1D95;
+  line-height: 1.6;
+}
+.donation-info-banner .dib-icon { font-size: 1.75rem; flex-shrink: 0; }
+.donation-info-banner strong { color: #3B0764; }
+
+/* ---- Kartu donasi hewan ---- */
+.donation-list { display: flex; flex-direction: column; gap: 1rem; }
+
+.donation-item {
+  background: var(--white);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(92,74,42,0.06);
+  border-left: 4px solid #7C3AED;
+  transition: box-shadow 0.2s;
+}
+.donation-item:hover { box-shadow: 0 6px 20px rgba(92,74,42,0.1); }
+.donation-item.ds-menunggu   { border-left-color: var(--orange); }
+.donation-item.ds-disetujui  { border-left-color: var(--green);  }
+.donation-item.ds-ditolak    { border-left-color: var(--red);    }
+
+.di-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.di-left { display: flex; align-items: center; gap: 0.85rem; }
+.di-emoji { font-size: 2.4rem; flex-shrink: 0; }
+.di-animal-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--brown-dark);
+}
+.di-meta { font-size: 0.8rem; color: var(--text-light); margin-top: 0.15rem; }
+
+.donation-status-pill {
+  padding: 4px 14px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.dspill-menunggu  { background: #FEF3E2; color: #B45309; }
+.dspill-disetujui { background: #E8F5EE; color: #2C7A4E; }
+.dspill-ditolak   { background: #FEE2E2; color: #B91C1C; }
+
+.di-desc {
+  font-size: 0.86rem;
+  color: var(--text-light);
+  line-height: 1.6;
+  margin-bottom: 0.6rem;
+  font-style: italic;
+}
+
+.di-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem; }
+.di-tag {
+  padding: 3px 10px;
+  background: #F5F3FF;
+  border: 1px solid #C4B5FD;
+  color: #5B21B6;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.di-approved-note {
+  background: #EDF7F1;
+  border-left: 3px solid var(--green);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.65rem 1rem;
+  font-size: 0.84rem;
+  color: #065F46;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+.di-rejected-note {
+  background: #FEF2F2;
+  border-left: 3px solid var(--red);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.65rem 1rem;
+  font-size: 0.84rem;
+  color: #991B1B;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+/* ---- Kondisi hewan (chip grid) ---- */
+.kondisi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+.kondisi-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  border: 1.5px solid var(--warm);
+  border-radius: 0.6rem;
+  background: var(--cream);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text);
+  transition: all 0.15s;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.kondisi-option:has(input:checked) {
+  border-color: #7C3AED;
+  background: #F5F3FF;
+  color: #5B21B6;
+  font-weight: 600;
+}
+.kondisi-option input { accent-color: #7C3AED; }
+
+/* Section divider dalam modal */
+.modal-section-divider {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7C3AED;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #EDE9FE;
+  padding-bottom: 0.5rem;
+  margin-top: 0.75rem;
+}
+.modal-section-divider:first-of-type { margin-top: 0; }
+
+/* ============================================================
+   HAMBURGER MENU — USER
+   ============================================================ */
+.hamburger {
+  background: var(--brown-dark);
+}
+.hamburger span {
+  background: var(--cream);
+}
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }

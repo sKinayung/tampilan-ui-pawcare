@@ -56,6 +56,7 @@ function showSection(name) {
     reports:    renderReportsSection,
     boardings:  renderBoardingsSection,
     complaints: renderComplaintsSection,
+    donations:  renderDonationsSection,
   };
   if (renderers[name]) renderers[name]();
 }
@@ -118,6 +119,7 @@ function renderOverview() {
   updateNewReportBadge();
   updateNewBoardingBadge();
   updateNewComplaintBadge();
+  updateNewDonationBadge();
 }
 
 function updatePendingBadge() {
@@ -989,6 +991,261 @@ function updateComplaintStatus(id, newStatus) {
 }
 
 // ==============================================================
+// DONASI HEWAN — ADMIN
+// ==============================================================
+
+let activeDonationFilter = '';
+
+const donationSpeciesEmoji = {
+  Kucing:'🐱', Anjing:'🐕', Kelinci:'🐇',
+  Burung:'🦜', Hamster:'🐹', Lainnya:'🐾',
+};
+
+function updateNewDonationBadge() {
+  const count = getDonations().filter(d => d.status === 'menunggu').length;
+  const badge = document.getElementById('newDonationBadge');
+  badge.style.display = count > 0 ? 'inline-block' : 'none';
+  badge.textContent   = count;
+}
+
+function filterDonations(filter) {
+  activeDonationFilter = filter;
+  document.querySelectorAll('#donationFilterChips .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.filter === filter);
+  });
+  renderDonationsSection();
+}
+
+function renderDonationStats() {
+  const all = getDonations();
+  const stats = [
+    { icon:'⏳', label:'Menunggu',   val: all.filter(d => d.status === 'menunggu').length,   color:'var(--orange)'  },
+    { icon:'✅', label:'Disetujui',  val: all.filter(d => d.status === 'disetujui').length,  color:'var(--green)'   },
+    { icon:'❌', label:'Ditolak',    val: all.filter(d => d.status === 'ditolak').length,    color:'var(--red)'     },
+    { icon:'🎁', label:'Total Masuk',val: all.length,                                         color:'#7C3AED'        },
+  ];
+  document.getElementById('donationStatRow').innerHTML = stats.map(s => `
+    <div class="stat-card" data-icon="${s.icon}">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value" style="color:${s.color}">${s.val}</div>
+    </div>`
+  ).join('');
+}
+
+function renderDonationsSection() {
+  renderDonationStats();
+
+  let donations = getDonations().reverse();
+  if (activeDonationFilter) {
+    donations = donations.filter(d => d.status === activeDonationFilter);
+  }
+
+  const el = document.getElementById('donationCards');
+
+  if (!donations.length) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:4rem 2rem;color:var(--text-light)">
+        <div style="font-size:3rem;margin-bottom:1rem">🎁</div>
+        <h3 style="font-family:'Playfair Display',serif;color:var(--brown)">Tidak ada donasi</h3>
+        <p>Belum ada donasi hewan yang sesuai filter ini</p>
+      </div>`;
+    updateNewDonationBadge();
+    return;
+  }
+
+  el.innerHTML = donations.map(d => {
+    const emoji  = d.image || donationSpeciesEmoji[d.species] || '🐾';
+    const kondisiTags = (d.kondisi || []).map(k =>
+      `<span class="dc-kondisi-tag">${k}</span>`).join('');
+
+    const statusBadge = {
+      menunggu:  `<span class="dpill dpill-menunggu">⏳ Menunggu</span>`,
+      disetujui: `<span class="dpill dpill-disetujui">✅ Disetujui</span>`,
+      ditolak:   `<span class="dpill dpill-ditolak">❌ Ditolak</span>`,
+    }[d.status] || '';
+
+    // Form kustomisasi hewan (hanya tampil saat proses approve)
+    const customizeForm = `
+      <div class="dc-customize-form">
+        <div class="dc-field">
+          <label>Nama di Galeri</label>
+          <input type="text" id="dcName-${d.id}" value="${d.name}">
+        </div>
+        <div class="dc-field">
+          <label>Emoji</label>
+          <input type="text" id="dcImage-${d.id}" value="${emoji}" maxlength="2"
+            style="text-align:center;font-size:1.2rem">
+        </div>
+        <div class="dc-field">
+          <label>Status Galeri</label>
+          <select id="dcStatus-${d.id}">
+            <option value="available">Tersedia</option>
+          </select>
+        </div>
+        <div class="dc-field">
+          <label>Lokasi</label>
+          <input type="text" id="dcLocation-${d.id}" value="${d.location}">
+        </div>
+        <div class="dc-field" style="grid-column:1/-1">
+          <label>Deskripsi untuk Galeri</label>
+          <textarea id="dcDesc-${d.id}" rows="2">${d.desc}</textarea>
+        </div>
+      </div>`;
+
+    return `
+      <div class="donation-card ds-${d.status}" id="dcard-${d.id}">
+
+        <div class="dc-header">
+          <div class="dc-left">
+            <span class="dc-emoji">${emoji}</span>
+            <div>
+              <div class="dc-name">${d.name}
+                <span style="font-weight:400;font-size:0.85rem;color:var(--text-light)">
+                  (${d.breed} · ${d.species})
+                </span>
+              </div>
+              <div class="dc-user">👤 ${d.userName} · ${d.userEmail} · 📱 ${d.phone}</div>
+            </div>
+          </div>
+          <div class="dc-right">
+            ${statusBadge}
+            <div class="dc-date">${new Date(d.date).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })}</div>
+          </div>
+        </div>
+
+        <div class="dc-specs">
+          <span class="dc-spec-tag">🐾 <strong>${d.species}</strong></span>
+          <span class="dc-spec-tag">🎂 <strong>${d.age} tahun</strong></span>
+          <span class="dc-spec-tag">${d.gender === 'Jantan' ? '♂' : '♀'} <strong>${d.gender}</strong></span>
+          <span class="dc-spec-tag">📍 <strong>${d.location}</strong></span>
+        </div>
+
+        ${kondisiTags ? `<div class="dc-kondisi-tags">${kondisiTags}</div>` : ''}
+        <div class="dc-desc">${d.desc}</div>
+        <div class="dc-alasan">💬 Alasan donasi: "${d.reason}"</div>
+
+        ${d.adminNote ? `
+          <div style="background:${d.status==='disetujui'?'#EDF7F1':'#FEF2F2'};
+                      border-left:3px solid ${d.status==='disetujui'?'var(--green)':'var(--red)'};
+                      border-radius:0 0.5rem 0.5rem 0;padding:0.65rem 1rem;
+                      font-size:0.84rem;color:${d.status==='disetujui'?'#065F46':'#991B1B'};
+                      margin-bottom:0.5rem">
+            📝 Catatan Admin: ${d.adminNote}
+          </div>` : ''}
+
+        <!-- Tombol aksi (hanya untuk yang masih menunggu) -->
+        ${d.status === 'menunggu' ? `
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem">
+            <button class="btn-icon btn-approve" onclick="openDonationProcess(${d.id})">
+              ✅ Review & Setujui
+            </button>
+            <button class="btn-icon btn-reject" onclick="processDonation(${d.id},'ditolak','')">
+              ❌ Tolak
+            </button>
+          </div>` : ''}
+
+        <!-- Area proses approve -->
+        <div class="dc-process-area" id="dpa-${d.id}">
+          <div class="dc-process-label">✏️ Sesuaikan data sebelum masuk galeri</div>
+          ${customizeForm}
+          <div class="dc-process-label">📝 Catatan untuk Pengguna (opsional)</div>
+          <textarea class="dc-note-input" id="dni-${d.id}"
+            placeholder="cth: Hewan Anda sudah kami terima dan akan segera dirawat..."></textarea>
+          <div class="dc-process-actions">
+            <button class="btn-icon btn-approve" onclick="processDonation(${d.id},'disetujui','')">
+              🎉 Setujui & Masukkan ke Galeri
+            </button>
+            <button class="btn-icon" onclick="toggleDonationProcess(${d.id})"
+              style="background:var(--warm);color:var(--brown-dark)">Batal</button>
+          </div>
+        </div>
+
+      </div>`;
+  }).join('');
+
+  updateNewDonationBadge();
+}
+
+function openDonationProcess(id) {
+  document.querySelectorAll('.dc-process-area.open').forEach(el => el.classList.remove('open'));
+  const area = document.getElementById('dpa-' + id);
+  area.classList.add('open');
+  area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function toggleDonationProcess(id) {
+  document.getElementById('dpa-' + id).classList.toggle('open');
+}
+
+function processDonation(id, decision, _unused) {
+  const donations = getDonations();
+  const idx       = donations.findIndex(d => d.id === id);
+  if (idx === -1) return;
+
+  const d    = donations[idx];
+  const note = document.getElementById('dni-' + id)?.value.trim() || '';
+
+  donations[idx] = {
+    ...d,
+    status:    decision,
+    adminNote: note,
+    processedDate: new Date().toISOString(),
+  };
+
+  // Jika disetujui → tambahkan ke galeri hewan secara otomatis
+  if (decision === 'disetujui') {
+    const galName     = document.getElementById(`dcName-${id}`)?.value.trim()     || d.name;
+    const galImage    = document.getElementById(`dcImage-${id}`)?.value.trim()    || d.image;
+    const galLocation = document.getElementById(`dcLocation-${id}`)?.value.trim() || d.location;
+    const galDesc     = document.getElementById(`dcDesc-${id}`)?.value.trim()     || d.desc;
+
+    donations[idx].adminName = galName; // simpan nama yang dipakai di galeri
+
+    const animals = getAnimals();
+    animals.push({
+      id:          Date.now(),
+      name:        galName,
+      image:       galImage,
+      species:     d.species,
+      breed:       d.breed,
+      age:         d.age,
+      gender:      d.gender,
+      location:    galLocation,
+      desc:        galDesc,
+      status:      'available',
+      addedDate:   new Date().toISOString(),
+      donatedBy:   d.userName,  // jejak siapa yang mendonasikan
+    });
+    saveAnimals(animals);
+  }
+
+  saveDonations(donations);
+
+  // Kirim notifikasi ke pengguna
+  const notifs   = getNotifs();
+  const approved = decision === 'disetujui';
+  notifs.push({
+    id:      Date.now(),
+    userId:  d.userId,
+    title:   approved ? '🎉 Donasi Hewan Disetujui!' : '❌ Donasi Hewan Ditolak',
+    message: approved
+      ? `Donasi hewan ${d.name} Anda telah disetujui dan kini tersedia di galeri adopsi PawCare!${note ? ' Catatan: ' + note : ''}`
+      : `Maaf, donasi hewan ${d.name} tidak dapat kami terima saat ini.${note ? ' Alasan: ' + note : ''}`,
+    type:  approved ? 'approved' : 'rejected',
+    read:  false,
+    time:  new Date().toISOString(),
+  });
+  saveNotifs(notifs);
+
+  showToast(approved
+    ? `🎉 ${d.name} berhasil ditambahkan ke galeri adopsi!`
+    : `❌ Donasi ${d.name} ditolak.`);
+
+  renderDonationsSection();
+  renderOverview();
+}
+
+// ==============================================================
 // KELUAR
 // ==============================================================
 
@@ -1004,3 +1261,29 @@ renderOverview();
 updateNewReportBadge();
 updateNewBoardingBadge();
 updateNewComplaintBadge();
+updateNewDonationBadge();
+
+// ---- Hamburger sidebar (mobile) ----
+function toggleSidebar() {
+  const sidebar = document.getElementById('mainSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const btn     = document.getElementById('hamburgerBtn');
+  const isOpen  = sidebar.classList.toggle('open');
+  overlay.classList.toggle('open', isOpen);
+  btn.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('mainSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const btn     = document.getElementById('hamburgerBtn');
+  sidebar.classList.remove('open');
+  overlay.classList.remove('open');
+  btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) closeSidebar();
+});

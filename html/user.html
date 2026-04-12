@@ -9,31 +9,46 @@
 </head>
 <body>
 
+<!-- Hamburger (mobile) -->
+<button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Buka menu">
+  <span id="hb1"></span>
+  <span id="hb2"></span>
+  <span id="hb3"></span>
+</button>
+
+<!-- Overlay gelap (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
   <!-- ==================== SIDEBAR ==================== -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="mainSidebar">
+  <div class="sidebar-scroll">
     <div class="sidebar-logo">🐾 PawCare</div>
 
     <span class="nav-section">Menu</span>
-    <button class="nav-item active" id="nav-gallery"       onclick="showSection('gallery')">
+    <button class="nav-item active" id="nav-gallery"       onclick="showSection('gallery');closeSidebar()">
       🏠 Galeri Hewan
     </button>
-    <button class="nav-item"        id="nav-my-adoptions"  onclick="showSection('my-adoptions')">
+    <button class="nav-item"        id="nav-my-adoptions"  onclick="showSection('my-adoptions');closeSidebar()">
       📋 Pengajuan Saya
     </button>
-    <button class="nav-item"        id="nav-notifications" onclick="showSection('notifications')">
+    <button class="nav-item"        id="nav-notifications" onclick="showSection('notifications');closeSidebar()">
       🔔 Notifikasi
       <span class="notif-badge" id="notifBadge" style="display:none">0</span>
     </button>
-    <button class="nav-item"        id="nav-reports"       onclick="showSection('reports')">
+    <button class="nav-item"        id="nav-reports"       onclick="showSection('reports');closeSidebar()">
       📝 Laporan Hewan
     </button>
-    <button class="nav-item"        id="nav-boardings"     onclick="showSection('boardings')">
+    <button class="nav-item"        id="nav-boardings"     onclick="showSection('boardings');closeSidebar()">
       🏡 Penitipan Hewan
     </button>
-    <button class="nav-item"        id="nav-complaints"    onclick="showSection('complaints')">
+    <button class="nav-item"        id="nav-complaints"    onclick="showSection('complaints');closeSidebar()">
       📣 Pengaduan
       <span class="notif-badge" id="complaintBadge" style="display:none">!</span>
     </button>
+    <button class="nav-item"        id="nav-donations"     onclick="showSection('donations');closeSidebar()">
+      🎁 Sumbang Hewan
+    </button>
+  </div>
 
     <div class="sidebar-bottom">
       <div class="user-info">
@@ -58,15 +73,15 @@
       </div>
 
       <div class="filter-bar">
-        <input  type="text"   class="search-input" id="searchInput"    placeholder="🔍 Cari nama hewan..." oninput="filterAnimals()">
-        <select class="filter-select"              id="filterSpecies"  onchange="filterAnimals()">
+        <input  type="text" class="search-input" id="searchInput" placeholder="🔍 Cari nama hewan..." oninput="filterAnimals()">
+        <select class="filter-select" id="filterSpecies"  onchange="filterAnimals()">
           <option value="">Semua Jenis</option>
           <option value="Kucing">Kucing</option>
           <option value="Anjing">Anjing</option>
           <option value="Kelinci">Kelinci</option>
           <option value="Burung">Burung</option>
         </select>
-        <select class="filter-select"              id="filterStatus"   onchange="filterAnimals()">
+        <select class="filter-select" id="filterStatus" onchange="filterAnimals()">
           <option value="">Semua Status</option>
           <option value="available">Tersedia</option>
           <option value="pending">Proses</option>
@@ -178,6 +193,29 @@
       </button>
 
       <div class="complaint-list" id="complaintList"></div>
+    </section>
+
+    <!-- Sumbang Hewan -->
+    <section class="section" id="section-donations">
+      <div class="page-header">
+        <h1>Sumbang Hewan</h1>
+        <p>Ajukan hewanmu untuk diadopsi oleh keluarga baru melalui PawCare</p>
+      </div>
+
+      <div class="donation-info-banner">
+        <span class="dib-icon">🎁</span>
+        <div>
+          <strong>Terlalu banyak hewan peliharaan?</strong> Kami bantu mencarikan rumah baru yang penuh kasih.
+          Ajukan hewan Anda dan tim PawCare akan meninjau serta mempublikasikannya ke galeri adopsi
+          setelah diverifikasi. Proses verifikasi membutuhkan <strong>1–3 hari kerja</strong>.
+        </div>
+      </div>
+
+      <button class="btn-new-donation" onclick="openDonationModal()">
+        🎁 Ajukan Sumbang Hewan
+      </button>
+
+      <div class="donation-list" id="donationList"></div>
     </section>
 
   </main>
@@ -486,6 +524,107 @@
 
       <button class="btn-primary" style="width:100%;background:var(--orange)" onclick="submitRating()">
         Kirim Penilaian
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL SUMBANG HEWAN ==================== -->
+  <!-- ==================== MODAL DONASI HEWAN ==================== -->
+  <div class="modal-overlay" id="donationModal">
+    <div class="modal" style="max-width:600px">
+      <button class="modal-close" onclick="closeDonationModal()">✕</button>
+      <h2>Formulir Donasi Hewan</h2>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-top:-0.75rem;margin-bottom:1.25rem">
+        Isi data lengkap hewan Anda agar tim PawCare dapat meninjau dengan baik
+      </p>
+
+      <!-- Identitas Hewan -->
+      <div class="modal-section-divider">🐾 Identitas Hewan</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nama Hewan</label>
+          <input type="text" id="dName" placeholder="cth: Milo">
+        </div>
+        <div class="form-group">
+          <label>Emoji / Ikon</label>
+          <input type="text" id="dImage" placeholder="🐱" maxlength="2"
+            style="text-align:center;font-size:1.4rem">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Jenis Hewan</label>
+          <select id="dSpecies">
+            <option value="Kucing">🐱 Kucing</option>
+            <option value="Anjing">🐕 Anjing</option>
+            <option value="Kelinci">🐇 Kelinci</option>
+            <option value="Burung">🦜 Burung</option>
+            <option value="Hamster">🐹 Hamster</option>
+            <option value="Lainnya">🐾 Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ras / Breed</label>
+          <input type="text" id="dBreed" placeholder="cth: Domestic Shorthair">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Usia (tahun)</label>
+          <input type="number" id="dAge" min="0" max="30" placeholder="cth: 3">
+        </div>
+        <div class="form-group">
+          <label>Jenis Kelamin</label>
+          <select id="dGender">
+            <option value="Jantan">Jantan</option>
+            <option value="Betina">Betina</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Lokasi Hewan Saat Ini</label>
+        <input type="text" id="dLocation" placeholder="cth: Jakarta Selatan">
+      </div>
+
+      <!-- Kondisi & Kesehatan -->
+      <div class="modal-section-divider">🏥 Kondisi & Kesehatan</div>
+      <div class="form-group">
+        <label>Kondisi Hewan</label>
+        <div class="kondisi-grid">
+          <label class="kondisi-option"><input type="checkbox" value="Sudah Vaksin"> 💉 Sudah Vaksin</label>
+          <label class="kondisi-option"><input type="checkbox" value="Sudah Steril"> ✂️ Sudah Steril</label>
+          <label class="kondisi-option"><input type="checkbox" value="Sudah Deworming"> 🐛 Sudah Deworming</label>
+          <label class="kondisi-option"><input type="checkbox" value="Jinak & Ramah"> 🤝 Jinak & Ramah</label>
+          <label class="kondisi-option"><input type="checkbox" value="Terlatih Dasar"> 🎓 Terlatih Dasar</label>
+          <label class="kondisi-option"><input type="checkbox" value="Cocok dengan Anak"> 👶 Cocok dengan Anak</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Deskripsi Karakter & Kebiasaan Hewan</label>
+        <textarea id="dDesc" rows="4"
+          placeholder="Ceritakan sifat, kebiasaan, makanan favorit, hal yang perlu diperhatikan calon adopter..."></textarea>
+      </div>
+
+      <!-- Alasan Donasi -->
+      <div class="modal-section-divider">💬 Alasan Donasi</div>
+      <div class="form-group">
+        <label>Mengapa Anda ingin mendonasikan hewan ini?</label>
+        <textarea id="dReason" rows="3"
+          placeholder="cth: Saya pindah ke luar kota dan tidak bisa membawa hewan, atau terlalu banyak hewan di rumah..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Nomor HP yang Bisa Dihubungi</label>
+        <input type="tel" id="dPhone" placeholder="08xxxxxxxxxx">
+      </div>
+
+      <div style="background:#F5F3FF;border:1px solid #C4B5FD;border-radius:0.75rem;padding:0.85rem 1rem;
+                  font-size:0.82rem;color:#5B21B6;margin-bottom:1rem;line-height:1.6">
+        ⚠️ Dengan mengirim formulir ini, Anda menyetujui bahwa kepemilikan hewan akan diserahkan
+        sepenuhnya kepada PawCare setelah pengajuan disetujui admin.
+      </div>
+
+      <button class="btn-primary" style="width:100%;background:#7C3AED" onclick="submitDonation()">
+        🎁 Kirim Permohonan Donasi
       </button>
     </div>
   </div>

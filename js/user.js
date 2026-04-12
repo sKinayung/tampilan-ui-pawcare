@@ -56,6 +56,7 @@ function showSection(name) {
     'reports':       renderReportsSection,
     'boardings':     renderBoardingsSection,
     'complaints':    renderComplaintsSection,
+    'donations':     renderDonationsSection,
   };
   if (renderers[name]) renderers[name]();
 }
@@ -921,6 +922,297 @@ function submitRating() {
 }
 
 // ==============================================================
+// SUMBANG HEWAN
+// ==============================================================
+
+const donationStatusMap = {
+  menunggu:  { cls: 'dstp-menunggu',  label: '⏳ Menunggu Verifikasi' },
+  disetujui: { cls: 'dstp-disetujui', label: '✅ Disetujui'           },
+  ditolak:   { cls: 'dstp-ditolak',   label: '❌ Ditolak'             },
+  diadopsi:  { cls: 'dstp-diadopsi',  label: '🎉 Sudah Diadopsi'      },
+};
+
+const speciesEmojiMap = {
+  Kucing:'🐱', Anjing:'🐕', Kelinci:'🐇', Burung:'🦜', Hamster:'🐹', Lainnya:'🐾',
+};
+
+/* ---- Render daftar sumbangan milik user ini ---- */
+function renderDonationsSection() {
+  const donations = getDonations()
+    .filter(d => d.userId === session.id)
+    .reverse();
+
+  const el = document.getElementById('donationList');
+
+  if (!donations.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">🎁</span>
+        <h3>Belum ada sumbangan</h3>
+        <p>Klik "Ajukan Sumbang Hewan" untuk memulai</p>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = donations.map(d => {
+    const st      = donationStatusMap[d.status] || donationStatusMap.menunggu;
+    const emoji   = d.image || speciesEmojiMap[d.species] || '🐾';
+    const health  = (d.healthConditions || [])
+      .map(h => `<span class="di-tag">${h}</span>`).join('');
+
+    const adminNoteHTML = d.adminNote
+      ? `<div class="di-admin-note"><strong>💬 Catatan Admin:</strong> ${d.adminNote}</div>`
+      : '';
+
+    const publishedHTML = d.status === 'disetujui'
+      ? `<div style="font-size:0.8rem;color:var(--green);margin-top:0.4rem;font-weight:600">
+           🌐 Hewan Anda sudah tampil di galeri adopsi PawCare!
+         </div>`
+      : '';
+
+    return `
+      <div class="donation-item dst-${d.status}">
+        <div class="di-header">
+          <div class="di-left">
+            <span class="di-emoji">${emoji}</span>
+            <div>
+              <div class="di-name">${d.name}</div>
+              <div class="di-meta">${d.breed} · ${d.species} · ${d.age} thn · ${d.gender} · 📍 ${d.location}</div>
+            </div>
+          </div>
+          <span class="dstp ${st.cls}">${st.label}</span>
+        </div>
+
+        ${health ? `<div class="di-tags">${health}</div>` : ''}
+        <div class="di-desc">${d.desc}</div>
+        ${d.reason ? `<div style="font-size:0.82rem;color:var(--text-light);margin-bottom:0.5rem">💭 <em>Alasan: ${d.reason}</em></div>` : ''}
+        ${d.familyType ? `<div style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.5rem">👨‍👩‍👧 Cocok untuk: <strong>${d.familyType}</strong></div>` : ''}
+        ${adminNoteHTML}
+        ${publishedHTML}
+        <div style="font-size:0.75rem;color:var(--text-light);margin-top:0.5rem">
+          Diajukan: ${new Date(d.date).toLocaleString('id-ID')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ---- Buka modal sumbang ---- */
+function openDonationModal() {
+  document.getElementById('dnName').value      = '';
+  document.getElementById('dnImage').value     = '';
+  document.getElementById('dnBreed').value     = '';
+  document.getElementById('dnAge').value       = '';
+  document.getElementById('dnLocation').value  = '';
+  document.getElementById('dnDesc').value      = '';
+  document.getElementById('dnReason').value    = '';
+  document.getElementById('dnPhone').value     = '';
+  document.getElementById('dnSpecies').value   = 'Kucing';
+  document.getElementById('dnGender').value    = 'Jantan';
+  document.getElementById('dnFamilyType').value = '';
+  document.querySelectorAll('#donationModal .health-option input')
+    .forEach(cb => cb.checked = false);
+  document.getElementById('donationModal').classList.add('open');
+}
+
+function closeDonationModal() {
+  document.getElementById('donationModal').classList.remove('open');
+}
+
+/* ---- Submit sumbang hewan ---- */
+function submitDonation() {
+  const name    = document.getElementById('dnName').value.trim();
+  const image   = document.getElementById('dnImage').value.trim();
+  const species = document.getElementById('dnSpecies').value;
+  const breed   = document.getElementById('dnBreed').value.trim();
+  const age     = parseInt(document.getElementById('dnAge').value) || 0;
+  const gender  = document.getElementById('dnGender').value;
+  const location = document.getElementById('dnLocation').value.trim();
+  const desc    = document.getElementById('dnDesc').value.trim();
+  const reason  = document.getElementById('dnReason').value.trim();
+  const phone   = document.getElementById('dnPhone').value.trim();
+  const familyType = document.getElementById('dnFamilyType').value;
+  const healthConditions = [...document.querySelectorAll('#donationModal .health-option input:checked')]
+    .map(cb => cb.value);
+
+  if (!name)     { showToast('⚠️ Nama hewan harus diisi!');           return; }
+  if (!breed)    { showToast('⚠️ Ras / breed harus diisi!');          return; }
+  if (!location) { showToast('⚠️ Kota / lokasi harus diisi!');        return; }
+  if (!desc)     { showToast('⚠️ Deskripsi hewan harus diisi!');      return; }
+  if (!reason)   { showToast('⚠️ Alasan menyumbang harus diisi!');    return; }
+  if (!phone)    { showToast('⚠️ Nomor HP harus diisi!');             return; }
+
+  const donations = getDonations();
+  const newDonation = {
+    id:               Date.now(),
+    userId:           session.id,
+    userName:         session.name,
+    userEmail:        session.email,
+    userPhone:        phone,
+    name, image: image || (speciesEmojiMap[species] || '🐾'),
+    species, breed, age, gender, location,
+    desc, reason, familyType,
+    healthConditions,
+    status:           'menunggu',
+    adminNote:        '',
+    publishedAnimalId: null,
+    date:             new Date().toISOString(),
+  };
+
+  donations.push(newDonation);
+  saveDonations(donations);
+
+  // Notifikasi ke pengguna
+  addNotification(
+    session.id,
+    '🎁 Pengajuan Sumbang Dikirim',
+    `Pengajuan sumbang hewan "${name}" telah diterima. Tim PawCare akan memverifikasi dalam 1–3 hari kerja.`,
+    'pending'
+  );
+
+  closeDonationModal();
+  showToast('🎁 Pengajuan sumbang hewan berhasil dikirim!');
+  renderDonationsSection();
+}
+
+// ==============================================================
+// DONASI HEWAN
+// ==============================================================
+
+/* ---- Render daftar donasi pengguna ini ---- */
+function renderDonationsSection() {
+  const donations = getDonations()
+    .filter(d => d.userId === session.id)
+    .reverse();
+
+  const el = document.getElementById('donationList');
+
+  if (!donations.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">🎁</span>
+        <h3>Belum ada donasi hewan</h3>
+        <p>Klik "Donasikan Hewan Saya" untuk mulai proses donasi</p>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = donations.map(d => {
+    const st   = donationStatusMap[d.status] || donationStatusMap.menunggu;
+    const tags = (d.kondisi || []).map(k =>
+      `<span class="di-tag">${k}</span>`).join('');
+
+    const noteHTML = d.status === 'disetujui'
+      ? `<div class="di-approved-note">
+           🎉 <strong>Donasi disetujui!</strong> ${d.adminName} telah masuk ke galeri adopsi PawCare.
+           ${d.adminNote ? `<br>📝 Catatan: ${d.adminNote}` : ''}
+         </div>`
+      : d.status === 'ditolak'
+        ? `<div class="di-rejected-note">
+             ❌ <strong>Donasi tidak disetujui.</strong>
+             ${d.adminNote ? `Alasan: ${d.adminNote}` : 'Silakan hubungi admin untuk informasi lebih lanjut.'}
+           </div>`
+        : '';
+
+    return `
+      <div class="donation-item ds-${d.status}">
+        <div class="di-header">
+          <div class="di-left">
+            <span class="di-emoji">${d.image || speciesEmojiMap[d.species] || '🐾'}</span>
+            <div>
+              <div class="di-animal-name">${d.name}</div>
+              <div class="di-meta">${d.breed} · ${d.species} · ${d.age} tahun · ${d.gender} · 📍 ${d.location}</div>
+            </div>
+          </div>
+          <span class="donation-status-pill ${st.pillCls}">${st.label}</span>
+        </div>
+        ${tags ? `<div class="di-tags">${tags}</div>` : ''}
+        <div class="di-desc">"${d.desc}"</div>
+        <div style="font-size:0.78rem;color:var(--text-light);margin-bottom:0.4rem">
+          💬 Alasan: <em>${d.reason}</em>
+        </div>
+        ${noteHTML}
+        <div style="font-size:0.75rem;color:var(--text-light);margin-top:0.5rem">
+          📅 Diajukan: ${new Date(d.date).toLocaleString('id-ID')} · 📱 ${d.phone}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ---- Buka modal donasi ---- */
+function openDonationModal() {
+  document.getElementById('dName').value     = '';
+  document.getElementById('dImage').value    = '';
+  document.getElementById('dSpecies').value  = 'Kucing';
+  document.getElementById('dBreed').value    = '';
+  document.getElementById('dAge').value      = '';
+  document.getElementById('dGender').value   = 'Betina';
+  document.getElementById('dLocation').value = '';
+  document.getElementById('dDesc').value     = '';
+  document.getElementById('dReason').value   = '';
+  document.getElementById('dPhone').value    = '';
+  document.querySelectorAll('#donationModal .kondisi-option input')
+    .forEach(cb => cb.checked = false);
+  document.getElementById('donationModal').classList.add('open');
+}
+
+function closeDonationModal() {
+  document.getElementById('donationModal').classList.remove('open');
+}
+
+/* ---- Submit donasi ---- */
+function submitDonation() {
+  const name     = document.getElementById('dName').value.trim();
+  const image    = document.getElementById('dImage').value.trim();
+  const species  = document.getElementById('dSpecies').value;
+  const breed    = document.getElementById('dBreed').value.trim();
+  const age      = parseInt(document.getElementById('dAge').value) || 0;
+  const gender   = document.getElementById('dGender').value;
+  const location = document.getElementById('dLocation').value.trim();
+  const desc     = document.getElementById('dDesc').value.trim();
+  const reason   = document.getElementById('dReason').value.trim();
+  const phone    = document.getElementById('dPhone').value.trim();
+  const kondisi  = [...document.querySelectorAll('#donationModal .kondisi-option input:checked')]
+                     .map(cb => cb.value);
+
+  if (!name)     { showToast('⚠️ Nama hewan harus diisi!');                return; }
+  if (!breed)    { showToast('⚠️ Ras / breed hewan harus diisi!');         return; }
+  if (!location) { showToast('⚠️ Lokasi hewan harus diisi!');              return; }
+  if (!desc)     { showToast('⚠️ Deskripsi hewan harus diisi!');           return; }
+  if (!reason)   { showToast('⚠️ Alasan donasi harus diisi!');             return; }
+  if (!phone)    { showToast('⚠️ Nomor HP harus diisi!');                  return; }
+
+  const donations = getDonations();
+  const newDonation = {
+    id:        Date.now(),
+    userId:    session.id,
+    userName:  session.name,
+    userEmail: session.email,
+    name, image: image || (speciesEmojiMap[species] || '🐾'),
+    species, breed, age, gender, location,
+    desc, reason, phone, kondisi,
+    status:    'menunggu',
+    adminNote: '',
+    adminName: '',
+    date:      new Date().toISOString(),
+  };
+
+  donations.push(newDonation);
+  saveDonations(donations);
+
+  // Notifikasi konfirmasi ke pengguna
+  addNotification(
+    session.id,
+    '🎁 Permohonan Donasi Dikirim',
+    `Permohonan donasi untuk ${name} telah diterima. Tim kami akan mereview dalam 3 hari kerja.`,
+    'pending'
+  );
+
+  closeDonationModal();
+  showToast('🎉 Permohonan donasi berhasil dikirim!');
+  renderDonationsSection();
+}
+
+// ==============================================================
 // KELUAR
 // ==============================================================
 
@@ -937,3 +1229,29 @@ function logout() {
 renderGallery();
 updateNotifBadge();
 updateComplaintBadge();
+
+// ---- Hamburger sidebar (mobile) ----
+function toggleSidebar() {
+  const sidebar  = document.getElementById('mainSidebar');
+  const overlay  = document.getElementById('sidebarOverlay');
+  const btn      = document.getElementById('hamburgerBtn');
+  const isOpen   = sidebar.classList.toggle('open');
+  overlay.classList.toggle('open', isOpen);
+  btn.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('mainSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const btn     = document.getElementById('hamburgerBtn');
+  sidebar.classList.remove('open');
+  overlay.classList.remove('open');
+  btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Tutup sidebar saat layar diperbesar ke desktop
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) closeSidebar();
+});
