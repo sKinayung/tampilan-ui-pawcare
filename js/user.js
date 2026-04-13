@@ -1141,7 +1141,6 @@ function renderDonationsSection() {
 /* ---- Buka modal donasi ---- */
 function openDonationModal() {
   document.getElementById('dName').value     = '';
-  document.getElementById('dImage').value    = '';
   document.getElementById('dSpecies').value  = 'Kucing';
   document.getElementById('dBreed').value    = '';
   document.getElementById('dAge').value      = '';
@@ -1162,7 +1161,6 @@ function closeDonationModal() {
 /* ---- Submit donasi ---- */
 function submitDonation() {
   const name     = document.getElementById('dName').value.trim();
-  const image    = document.getElementById('dImage').value.trim();
   const species  = document.getElementById('dSpecies').value;
   const breed    = document.getElementById('dBreed').value.trim();
   const age      = parseInt(document.getElementById('dAge').value) || 0;
@@ -1187,7 +1185,8 @@ function submitDonation() {
     userId:    session.id,
     userName:  session.name,
     userEmail: session.email,
-    name, image: image || (speciesEmojiMap[species] || '🐾'),
+    name,
+    image:     speciesEmojiMap[species] || '🐾',
     species, breed, age, gender, location,
     desc, reason, phone, kondisi,
     status:    'menunggu',

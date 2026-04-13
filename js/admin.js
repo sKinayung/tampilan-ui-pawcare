@@ -161,12 +161,28 @@ function renderAnimalsTable() {
 // MODAL TAMBAH / EDIT HEWAN
 // ==============================================================
 
+/* Peta emoji otomatis berdasarkan jenis hewan */
+const SPECIES_EMOJI = {
+  Kucing:  '🐱',
+  Anjing:  '🐕',
+  Kelinci: '🐇',
+  Burung:  '🦜',
+  Hamster: '🐹',
+  Lainnya: '🐾',
+};
+
+function getEmojiBySpecies(species) {
+  return SPECIES_EMOJI[species] || '🐾';
+}
+
+/* Dipanggil saat dropdown jenis hewan berubah — tidak perlu render apapun,
+   emoji akan diambil otomatis dari species saat simpan */
+function previewSpeciesEmoji() { /* placeholder untuk onchange di HTML */ }
+
 function openAnimalModal() {
-  // Reset semua field
   document.getElementById('aEditId').value    = '';
   document.getElementById('animalModalTitle').textContent = 'Tambah Hewan';
   document.getElementById('aName').value      = '';
-  document.getElementById('aImage').value     = '🐾';
   document.getElementById('aBreed').value     = '';
   document.getElementById('aAge').value       = '';
   document.getElementById('aLocation').value  = '';
@@ -182,7 +198,6 @@ function editAnimal(id) {
   document.getElementById('aEditId').value    = id;
   document.getElementById('animalModalTitle').textContent = 'Edit Hewan';
   document.getElementById('aName').value      = a.name;
-  document.getElementById('aImage').value     = a.image;
   document.getElementById('aBreed').value     = a.breed;
   document.getElementById('aAge').value       = a.age;
   document.getElementById('aLocation').value  = a.location;
@@ -199,7 +214,6 @@ function closeAnimalModal() {
 
 function saveAnimal() {
   const name     = document.getElementById('aName').value.trim();
-  const image    = document.getElementById('aImage').value.trim() || '🐾';
   const breed    = document.getElementById('aBreed').value.trim();
   const age      = parseInt(document.getElementById('aAge').value) || 1;
   const location = document.getElementById('aLocation').value.trim();
@@ -208,6 +222,9 @@ function saveAnimal() {
   const gender   = document.getElementById('aGender').value;
   const status   = document.getElementById('aStatus').value;
   const editId   = document.getElementById('aEditId').value;
+
+  /* Emoji ditentukan otomatis dari jenis hewan */
+  const image = getEmojiBySpecies(species);
 
   if (!name || !breed || !location) {
     showToast('⚠️ Nama, ras, dan lokasi wajib diisi!');
@@ -1072,11 +1089,6 @@ function renderDonationsSection() {
           <input type="text" id="dcName-${d.id}" value="${d.name}">
         </div>
         <div class="dc-field">
-          <label>Emoji</label>
-          <input type="text" id="dcImage-${d.id}" value="${emoji}" maxlength="2"
-            style="text-align:center;font-size:1.2rem">
-        </div>
-        <div class="dc-field">
           <label>Status Galeri</label>
           <select id="dcStatus-${d.id}">
             <option value="available">Tersedia</option>
@@ -1195,7 +1207,7 @@ function processDonation(id, decision, _unused) {
   // Jika disetujui → tambahkan ke galeri hewan secara otomatis
   if (decision === 'disetujui') {
     const galName     = document.getElementById(`dcName-${id}`)?.value.trim()     || d.name;
-    const galImage    = document.getElementById(`dcImage-${id}`)?.value.trim()    || d.image;
+    const galImage    = getEmojiBySpecies(d.species);
     const galLocation = document.getElementById(`dcLocation-${id}`)?.value.trim() || d.location;
     const galDesc     = document.getElementById(`dcDesc-${id}`)?.value.trim()     || d.desc;
 

@@ -274,26 +274,20 @@
       <button class="modal-close" onclick="closeAnimalModal()">✕</button>
       <h2 id="animalModalTitle">Tambah Hewan</h2>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Nama Hewan</label>
-          <input type="text" id="aName" placeholder="cth: Luna">
-        </div>
-        <div class="form-group">
-          <label>Emoji</label>
-          <input type="text" id="aImage" placeholder="🐱" maxlength="2" style="text-align:center;font-size:1.4rem">
-        </div>
+      <div class="form-group">
+        <label>Nama Hewan</label>
+        <input type="text" id="aName" placeholder="cth: Luna">
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>Jenis Hewan</label>
-          <select id="aSpecies">
-            <option>Kucing</option>
-            <option>Anjing</option>
-            <option>Kelinci</option>
-            <option>Burung</option>
-            <option>Hamster</option>
-            <option>Lainnya</option>
+          <select id="aSpecies" onchange="previewSpeciesEmoji()">
+            <option value="Kucing">🐱 Kucing</option>
+            <option value="Anjing">🐕 Anjing</option>
+            <option value="Kelinci">🐇 Kelinci</option>
+            <option value="Burung">🦜 Burung</option>
+            <option value="Hamster">🐹 Hamster</option>
+            <option value="Lainnya">🐾 Lainnya</option>
           </select>
         </div>
         <div class="form-group">
