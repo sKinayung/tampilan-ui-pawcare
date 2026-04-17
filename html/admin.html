@@ -96,9 +96,12 @@
 
     <!-- Data Hewan -->
     <section class="section" id="section-animals">
-      <div class="page-header">
-        <h1>Data Hewan</h1>
-        <p>Kelola daftar hewan yang tersedia untuk adopsi</p>
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
+        <div>
+          <h1>Data Hewan</h1>
+          <p>Kelola daftar hewan yang tersedia untuk adopsi</p>
+        </div>
+        <button class="btn-print" onclick="printSection('animals')">🖨️ Cetak Laporan</button>
       </div>
       <div class="table-container">
         <div class="table-header">
@@ -119,9 +122,12 @@
 
     <!-- Pengajuan Adopsi -->
     <section class="section" id="section-adoptions">
-      <div class="page-header">
-        <h1>Pengajuan Adopsi</h1>
-        <p>Tinjau dan proses pengajuan adopsi dari pengguna</p>
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
+        <div>
+          <h1>Pengajuan Adopsi</h1>
+          <p>Tinjau dan proses pengajuan adopsi dari pengguna</p>
+        </div>
+        <button class="btn-print" onclick="printSection('adoptions')">🖨️ Cetak Laporan</button>
       </div>
       <div class="table-container">
         <div class="table-header">
@@ -164,9 +170,12 @@
 
     <!-- Laporan Perkembangan Hewan -->
     <section class="section" id="section-reports">
-      <div class="page-header">
-        <h1>Laporan Perkembangan Hewan</h1>
-        <p>Laporan kondisi hewan pasca adopsi yang dikirim oleh pengguna</p>
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
+        <div>
+          <h1>Laporan Perkembangan Hewan</h1>
+          <p>Laporan kondisi hewan pasca adopsi yang dikirim oleh pengguna</p>
+        </div>
+        <button class="btn-print" onclick="printSection('reports')">🖨️ Cetak Laporan</button>
       </div>
 
       <div class="filter-chips" id="reportFilterChips">
@@ -183,9 +192,12 @@
 
     <!-- Penitipan Hewan -->
     <section class="section" id="section-boardings">
-      <div class="page-header">
-        <h1>Kelola Penitipan Hewan</h1>
-        <p>Tinjau dan kelola pengajuan penitipan dari pengguna</p>
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
+        <div>
+          <h1>Kelola Penitipan Hewan</h1>
+          <p>Tinjau dan kelola pengajuan penitipan dari pengguna</p>
+        </div>
+        <button class="btn-print" onclick="printSection('boardings')">🖨️ Cetak Laporan</button>
       </div>
 
       <!-- Statistik ringkas -->
@@ -206,9 +218,12 @@
 
     <!-- Pengaduan / Komplain -->
     <section class="section" id="section-complaints">
-      <div class="page-header">
-        <h1>Kelola Pengaduan</h1>
-        <p>Tinjau dan tanggapi pengaduan dari pengguna</p>
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
+        <div>
+          <h1>Kelola Pengaduan</h1>
+          <p>Tinjau dan tanggapi pengaduan dari pengguna</p>
+        </div>
+        <button class="btn-print" onclick="printSection('complaints')">🖨️ Cetak Laporan</button>
       </div>
 
       <!-- Statistik -->
@@ -227,11 +242,14 @@
       <div class="complaint-cards" id="complaintCards"></div>
     </section>
 
-    <!-- Donasi Hewan -->
+    <!-- Sumbang Hewan -->
     <section class="section" id="section-donations">
-      <div class="page-header">
-        <h1>Donasi Hewan dari Pengguna</h1>
-        <p>Tinjau dan setujui hewan yang ingin didonasikan — jika disetujui, hewan otomatis masuk galeri adopsi</p>
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
+        <div>
+          <h1>Sumbang Hewan dari Pengguna</h1>
+          <p>Tinjau dan setujui hewan yang ingin disumbangkan — jika disetujui, hewan otomatis masuk galeri adopsi</p>
+        </div>
+        <button class="btn-print" onclick="printSection('donations')">🖨️ Cetak Laporan</button>
       </div>
 
       <div class="donation-stat-row" id="donationStatRow"></div>
@@ -244,26 +262,6 @@
       </div>
 
       <div class="donation-cards" id="donationCards"></div>
-    </section>
-
-    <!-- Sumbang Hewan -->
-    <section class="section" id="section-donations">
-      <div class="page-header">
-        <h1>Kelola Sumbang Hewan</h1>
-        <p>Tinjau, verifikasi, dan publikasikan hewan sumbangan ke galeri adopsi</p>
-      </div>
-
-      <div class="donation-stat-row" id="donationStatRow"></div>
-
-      <div class="filter-chips" id="donationFilterChips">
-        <button class="chip active" onclick="filterDonations('')"          data-filter="">Semua</button>
-        <button class="chip"        onclick="filterDonations('menunggu')"  data-filter="menunggu">🟠 Menunggu</button>
-        <button class="chip"        onclick="filterDonations('disetujui')" data-filter="disetujui">🟢 Disetujui</button>
-        <button class="chip"        onclick="filterDonations('diadopsi')"  data-filter="diadopsi">🟣 Diadopsi</button>
-        <button class="chip"        onclick="filterDonations('ditolak')"   data-filter="ditolak">🔴 Ditolak</button>
-      </div>
-
-      <div class="donation-admin-cards" id="donationAdminCards"></div>
     </section>
 
   </main>
@@ -422,11 +420,15 @@
     </div>
   </div>
 
+  <!-- Area cetak (diisi oleh JS saat mencetak) -->
+  <div id="printArea" style="display:none"></div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <!-- storage.js HARUS dimuat sebelum admin.js -->
   <script src="../js/storage.js"></script>
   <script src="../js/admin.js"></script>
+  <script src="../js/print-admin.js"></script>
 </body>
 </html>

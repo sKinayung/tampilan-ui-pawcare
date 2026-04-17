@@ -1266,6 +1266,13 @@ function logout() {
   window.location.href = 'index.html';
 }
 
+
+
+function logout() {
+  clearSession();
+  window.location.href = 'index.html';
+}
+
 // ==============================================================
 // INISIALISASI
 // ==============================================================
