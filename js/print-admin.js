@@ -461,6 +461,16 @@ function _printBoardings(tgl, jam, tglKode) {
   const rev    = data.filter(b => b.status === 'selesai').reduce((s, b) => s + (b.totalCost || 0), 0);
   const lblSts = { menunggu:'Menunggu', disetujui:'Disetujui', berlangsung:'Berlangsung', selesai:'Selesai', ditolak:'Ditolak' };
 
+  const landscapeCSS = PRINT_CSS
+    .replace(
+      '@page { size: A4 portrait; margin: 0; }',
+      '@page { size: A4 landscape; margin: 0; }'
+    )
+    .replace(
+      'width: 210mm;\n    min-height: 297mm;',
+      'width: 297mm;\n    min-height: 210mm;'
+    );
+
   const body = `
     ${_kop()}
     ${_docInfo(`LPT-${tglKode}-001`, 'Laporan Penitipan Hewan', tgl, jam)}
@@ -475,16 +485,18 @@ function _printBoardings(tgl, jam, tglKode) {
     <table class="data-table">
       <thead>
         <tr>
-          <th style="width:4%">No</th>
-          <th style="width:11%">Nama Hewan</th>
-          <th style="width:8%">Jenis</th>
-          <th style="width:14%">Pemilik</th>
-          <th style="width:16%">Email</th>
-          <th style="width:9%">Check-In</th>
-          <th style="width:9%">Check-Out</th>
-          <th style="width:6%">Durasi</th>
-          <th style="width:11%">Biaya</th>
-          <th style="width:12%">Status</th>
+          <th style="width:3%">No</th>
+          <th style="width:9%">Nama Hewan</th>
+          <th style="width:6%">Jenis</th>
+          <th style="width:10%">Pemilik</th>
+          <th style="width:14%">Email</th>
+          <th style="width:9%">No. HP</th>
+          <th style="width:8%">Check-In</th>
+          <th style="width:8%">Check-Out</th>
+          <th style="width:5%">Durasi</th>
+          <th style="width:10%">Biaya</th>
+          <th style="width:18%">Layanan Tambahan</th>
+          <th style="width:8%">Status</th>
         </tr>
       </thead>
       <tbody>
@@ -495,10 +507,12 @@ function _printBoardings(tgl, jam, tglKode) {
             <td>${b.petSpecies}</td>
             <td>${b.userName}</td>
             <td style="font-size:9pt">${b.userEmail}</td>
+            <td style="font-size:9pt">${b.contactPhone || '—'}</td>
             <td style="text-align:center">${new Date(b.checkIn).toLocaleDateString('id-ID')}</td>
             <td style="text-align:center">${new Date(b.checkOut).toLocaleDateString('id-ID')}</td>
             <td style="text-align:center">${b.days} hari</td>
             <td style="text-align:right">Rp ${(b.totalCost || 0).toLocaleString('id-ID')}</td>
+            <td style="font-size:9pt">${(b.services || []).join(', ') || '—'}</td>
             <td style="text-align:center">${lblSts[b.status] || b.status}</td>
           </tr>`).join('')}
       </tbody>
@@ -506,8 +520,26 @@ function _printBoardings(tgl, jam, tglKode) {
 
     ${_ttdFooter(tgl, jam)}`;
 
+  const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Laporan Penitipan Hewan — PawCare</title>
+  <style>${landscapeCSS}</style>
+</head>
+<body>
+<div class="print-btn-bar no-print">
+  <button class="btn-close"    onclick="window.close()">✕ Tutup</button>
+  <button class="btn-do-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+</div>
+<div class="page">
+  ${body}
+</div>
+</body>
+</html>`;
+
   const win = window.open('', '_blank');
-  win.document.write(_buildDoc('Laporan Penitipan Hewan', body));
+  win.document.write(html);
   win.document.close();
 }
 
@@ -587,9 +619,21 @@ function _printDonations(tgl, jam, tglKode) {
   const tlk    = data.filter(d => d.status === 'ditolak').length;
   const lblSts = { menunggu:'Menunggu', disetujui:'Disetujui', ditolak:'Ditolak' };
 
+  // CSS khusus landscape — override PRINT_CSS yang portrait
+  const landscapeCSS = PRINT_CSS
+    .replace(
+      '@page { size: A4 portrait; margin: 0; }',
+      '@page { size: A4 landscape; margin: 0; }'
+    )
+    .replace(
+      // Lebar .page dari 210mm (portrait) → 297mm (landscape)
+      'width: 210mm;\n    min-height: 297mm;',
+      'width: 297mm;\n    min-height: 210mm;'
+    );
+
   const body = `
     ${_kop()}
-    ${_docInfo(`LSH-${tglKode}-001`, 'Laporan Sumbang Hewan dari Pengguna', tgl, jam)}
+    ${_docInfo(`LSH-${tglKode}-001`, 'Laporan Donasi Hewan dari Pengguna', tgl, jam)}
 
     <div class="summary-title">I. Ringkasan Data</div>
     <table class="summary-table">
@@ -597,21 +641,22 @@ function _printDonations(tgl, jam, tglKode) {
       <tbody><tr><td>${tot}</td><td>${mng}</td><td>${stj}</td><td>${tlk}</td></tr></tbody>
     </table>
 
-    <div class="data-title">II. Daftar Sumbang Hewan</div>
+    <div class="data-title">II. Daftar Donasi Hewan</div>
     <table class="data-table">
       <thead>
         <tr>
-          <th style="width:4%">No</th>
-          <th style="width:12%">Nama Hewan</th>
-          <th style="width:8%">Jenis</th>
-          <th style="width:12%">Ras / Breed</th>
-          <th style="width:6%">Usia</th>
-          <th style="width:8%">Kelamin</th>
-          <th style="width:14%">Donatur</th>
-          <th style="width:16%">Email</th>
+          <th style="width:3%">No</th>
+          <th style="width:9%">Nama Hewan</th>
+          <th style="width:7%">Jenis</th>
+          <th style="width:10%">Ras / Breed</th>
+          <th style="width:5%">Usia</th>
+          <th style="width:6%">Kelamin</th>
+          <th style="width:11%">Donatur</th>
+          <th style="width:15%">Email</th>
+          <th style="width:10%">No. HP</th>
           <th style="width:10%">Lokasi</th>
-          <th style="width:8%">Tanggal</th>
-          <th style="width:10%">Status</th>
+          <th style="width:7%">Tanggal</th>
+          <th style="width:7%">Status</th>
         </tr>
       </thead>
       <tbody>
@@ -625,6 +670,7 @@ function _printDonations(tgl, jam, tglKode) {
             <td style="text-align:center">${d.gender}</td>
             <td>${d.userName}</td>
             <td style="font-size:9pt">${d.userEmail}</td>
+            <td style="font-size:9pt">${d.phone || '—'}</td>
             <td>${d.location}</td>
             <td style="text-align:center">${new Date(d.date).toLocaleDateString('id-ID')}</td>
             <td style="text-align:center">${lblSts[d.status] || d.status}</td>
@@ -634,7 +680,26 @@ function _printDonations(tgl, jam, tglKode) {
 
     ${_ttdFooter(tgl, jam)}`;
 
+  // Buat dokumen dengan CSS landscape
+  const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Laporan Sumbang Hewan — PawCare</title>
+  <style>${landscapeCSS}</style>
+</head>
+<body>
+<div class="print-btn-bar no-print">
+  <button class="btn-close"    onclick="window.close()">✕ Tutup</button>
+  <button class="btn-do-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+</div>
+<div class="page">
+  ${body}
+</div>
+</body>
+</html>`;
+
   const win = window.open('', '_blank');
-  win.document.write(_buildDoc('Laporan Sumbang Hewan', body));
+  win.document.write(html);
   win.document.close();
 }

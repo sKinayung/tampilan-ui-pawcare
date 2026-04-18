@@ -1216,3 +1216,29 @@ body {
 .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
 .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ============================================================
+   TOMBOL CETAK RIWAYAT — SISI PENGGUNA
+   ============================================================ */
+.btn-print-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  background: var(--white);
+  color: var(--brown-dark);
+  border: 1.5px solid var(--warm);
+  border-radius: 0.6rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-print-user:hover {
+  background: var(--brown-dark);
+  color: white;
+  border-color: var(--brown-dark);
+}
